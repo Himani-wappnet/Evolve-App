@@ -1,20 +1,21 @@
 import { StyleSheet } from 'react-native';
-import { Colors } from '../../constants/colors';
-import { spacing } from '../../constants/spacing';
-import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
-import { TextStyles } from '../../constants/textstyle';
-import { Dimens } from '../../constants/dimens';
-import layout from '../../utils/layout';
+import { Colors } from '../../../constants/colors';
+import { heightPercentageToDP as hp} from 'react-native-responsive-screen';
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    // justifyContent: 'space-between',
     padding: 16,
     backgroundColor: '#FFFFFF',
     elevation: 2,
@@ -23,17 +24,14 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000000',
-  },
-  headerRight: {
-    flexDirection: 'row',
+  addMemories: {
+    flex: 1,
     alignItems: 'center',
   },
-  headerIcon: {
-    marginLeft: 16,
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#000000',
   },
   dateSelector: {
     flexDirection: 'row',
@@ -83,7 +81,6 @@ export const styles = StyleSheet.create({
   },
   contentInput: {
     fontSize: 16,
-    height:'auto',
     minHeight: 200,
     padding: 16,
     textAlignVertical: 'top',
@@ -111,25 +108,14 @@ export const styles = StyleSheet.create({
   },
   saveButton: {
     backgroundColor: Colors.primary,
-    margin: 16,
+    borderRadius: 12,
     padding: 16,
-    borderRadius: 8,
+    margin: 16,
     alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
   },
   saveButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
-  addMemories:{
-    width:wp("85%"),
-    alignSelf:'center',
-    justifyContent:"center",
-    alignItems:'center'
-  }
-});
+}); 

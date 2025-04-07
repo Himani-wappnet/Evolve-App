@@ -248,7 +248,12 @@ const HomeScreen = () => {
                         />
                     }
                 >
-                    {displayedHabits.length === 0 ? (
+                    {operationLoading ? (
+            <View style={styles.loadingMoreContainer}>
+              <ActivityIndicator testID="loader" size="large" color={Colors.primary} />
+            </View>
+          ) :
+                    displayedHabits.length === 0 ? (
                         <View style={styles.noHabitsContainer}>
                             <Text style={styles.noHabitsText}>No habits scheduled for this day</Text>
                         </View>
@@ -308,11 +313,11 @@ const HomeScreen = () => {
                                     </View>
                                 </TouchableOpacity>
                             ))}
-                            {loadingMore && (
+                            {/* {loadingMore && (
                                 <View style={styles.loadingMoreContainer}>
                                     <ActivityIndicator size="small" color={Colors.primary} />
                                 </View>
-                            )}
+                            )} */}
                         </>
                     )}
                 </ScrollView>

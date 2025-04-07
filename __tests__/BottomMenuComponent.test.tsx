@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import BottomNavigation from '../src/components/BottomMenuComponent';
+import BottomNavigation from '../src/components/BottomMenu/BottomMenuComponent';
 import { Strings } from '../src/constants/strings';
 import { Colors } from '../src/constants/colors';
 

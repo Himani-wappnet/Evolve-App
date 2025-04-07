@@ -9,14 +9,19 @@ import { Colors } from '../../constants/colors';
 import Toast from '../../components/Toast';
 import { icons } from '../../constants/images';
 
+// Add type declaration for MaterialIcons
+const Icon = MaterialIcons as any;
+
 type RootStackParamList = {
   TaskDetail: { taskId?: string };
   DailyDairy: undefined;
   EditTask: { taskId: string };
+  DiaryDetail: { taskId: string };
+  Dashboard: undefined;
 };
 
 type TaskDetailScreenProps = {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'TaskDetail'>;
+  navigation: NativeStackNavigationProp<RootStackParamList>;
   route: { params?: { taskId?: string, toastMessage?: string } };
 };
 
@@ -29,7 +34,7 @@ type TaskData = {
   createdAt: any;
 };
 
-const TaskDetailScreen: React.FC<TaskDetailScreenProps> = ({ navigation, route }) => {
+const MyDairyScreen: React.FC<TaskDetailScreenProps> = ({ navigation, route }) => {
   const [tasks, setTasks] = React.useState<TaskData[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -101,7 +106,7 @@ const TaskDetailScreen: React.FC<TaskDetailScreenProps> = ({ navigation, route }
 }, [route.params?.toastMessage]);
 
   const handleEdit = (taskId: string) => {
-    navigation.navigate('EditTaskDetail', { taskId });
+    navigation.navigate('EditTask', { taskId });
   };
 
   const handleShare = () => {
@@ -166,6 +171,10 @@ const TaskDetailScreen: React.FC<TaskDetailScreenProps> = ({ navigation, route }
     navigation.navigate('DailyDairy');
   };
 
+  const handleCardPress = (taskId: string) => {
+    navigation.navigate('DiaryDetail', { taskId });
+  };
+
   return (
     <View style={styles.container}>
        {toast && (
@@ -177,11 +186,11 @@ const TaskDetailScreen: React.FC<TaskDetailScreenProps> = ({ navigation, route }
             )}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.navigate('Dashboard')}>
-          <MaterialIcons name="arrow-back" size={24} color="#000" />
+          <Icon name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>My Diary</Text>
         <TouchableOpacity onPress={() => {}}>
-          {/* <MaterialIcons name="star-border" size={24} color="#000" /> */}
+          {/* <Icon name="star-border" size={24} color="#000" /> */}
         </TouchableOpacity>
       </View>
 
@@ -198,10 +207,14 @@ const TaskDetailScreen: React.FC<TaskDetailScreenProps> = ({ navigation, route }
   </View>
           ) : (
             tasks.map((task) => (
-              <View key={task.id} style={styles.taskCard}>
+              <TouchableOpacity
+                key={task.id}
+                style={styles.taskCard}
+                onPress={() => handleCardPress(task.id)}
+              >
                 <View style={styles.taskHeader}>
                   <View style={styles.moodContainer}>
-                    <MaterialIcons
+                    <Icon
                       name={moods[task.mood].icon}
                       size={24}
                       color={moods[task.mood].color}
@@ -217,26 +230,24 @@ const TaskDetailScreen: React.FC<TaskDetailScreenProps> = ({ navigation, route }
                   </View>
                   <View style={styles.actionsContainer}>
                     <TouchableOpacity style={styles.actionButton} onPress={() => handleEdit(task.id)}>
-                      <MaterialIcons name="edit" size={20} color="#666" />
+                      <Icon name="edit" size={20} color="#666" />
                       <Text style={styles.actionText}>Edit</Text>
                     </TouchableOpacity>
                    
                     <TouchableOpacity style={styles.actionButton} onPress={() => handleDelete(task.id)}>
-                      <MaterialIcons name="delete" size={20} color="#666" />
+                      <Icon name="delete" size={20} color="#666" />
                       <Text style={styles.actionText}>Delete</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
 
                 <Text style={styles.title}>{task.title}</Text>
-                <Text style={styles.contentText}>{task.content}</Text>
-              </View>
+                <Text style={styles.contentText}  numberOfLines={1}>{task.content}</Text>
+              </TouchableOpacity>
             ))
           )}
         </ScrollView>
-        {/* <TouchableOpacity style={styles.floatingAddButton} onPress={handleAddTask}>
-          <MaterialIcons name="add-circle" size={56} color={Colors.primary} />
-        </TouchableOpacity> */}
+       
          <TouchableOpacity
         style={styles.fab}
         testID="floating-shop-button"
@@ -256,4 +267,4 @@ const TaskDetailScreen: React.FC<TaskDetailScreenProps> = ({ navigation, route }
   );
 };
 
-export default TaskDetailScreen; 
+export default MyDairyScreen; 

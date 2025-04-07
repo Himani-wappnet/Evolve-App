@@ -140,4 +140,9 @@ export const styles = StyleSheet.create({
         fontWeight: '600',
         fontSize: wp('4%'),
     },
+    errorText: {
+        color: '#FF0000',
+        marginBottom: 10,
+        textAlign: 'center',
+    },
 }); 

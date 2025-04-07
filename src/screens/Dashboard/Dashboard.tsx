@@ -6,7 +6,7 @@ import {
 
 import { styles } from './Styles';
 
-import BottomNavigation from '../../components/BottomMenuComponent';
+import BottomNavigation from '../../components/BottomMenu/BottomMenuComponent';
 import { Colors } from '../../constants/colors';
 import Toast from '../../components/Toast';
 

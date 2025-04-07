@@ -46,7 +46,7 @@ const LoginPage = ({ navigation, route }: any) => {
   const handleLogin = async () => {
     if (!text || !password) {
       setToast({ message: 'Please enter both email and password', type: 'error' }); 
-      navigation.replace('Dashboard');
+      // navigation.replace('Dashboard');
       return;
     }
 

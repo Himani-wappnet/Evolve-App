@@ -1,17 +1,20 @@
-import { Text, View, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native'
+import { Text, View, TextInput, TouchableOpacity, ScrollView } from 'react-native'
 import React, { useState } from 'react'
 import { styles } from './Styles'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import DateTimePicker from '@react-native-community/datetimepicker'
-import firestore from '@react-native-firebase/firestore'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import Toast from '../../components/Toast'
+import { DiaryRepositoryImpl } from '../../../data/repositories/DiaryRepositoryImpl'
+import { DiaryUseCases } from '../../../domain/usecases/DiaryUseCases'
+import { DailyDairyPresenter, DailyDairyView } from '../../presenters/DailyDairyPresenter'
+import Toast from '../../../components/Toast'
+import { MOODS } from '../../../domain/models/Diary'
 
 const Icon = MaterialIcons as any;
 
 type RootStackParamList = {
   DailyDairy: undefined;
-  TaskDetail: { taskId: string };
+  MyDairyScreen: { taskId: string };
 };
 
 type DailyDairyScreenProps = {
@@ -27,13 +30,26 @@ const DailyDairyScreen: React.FC<DailyDairyScreenProps> = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  const moods = [
-    { id: 0, icon: 'sentiment-very-dissatisfied', color: '#FF6B6B' },
-    { id: 1, icon: 'sentiment-dissatisfied', color: '#FFB067' },
-    { id: 2, icon: 'sentiment-neutral', color: '#FFD93D' },
-    { id: 3, icon: 'sentiment-satisfied', color: '#6BCB77' },
-    { id: 4, icon: 'sentiment-very-satisfied', color: '#4D96FF' },
-  ]
+  // Initialize dependencies
+  const diaryRepository = new DiaryRepositoryImpl();
+  const diaryUseCases = new DiaryUseCases(diaryRepository);
+  const presenter = new DailyDairyPresenter({
+    showLoading: () => setIsLoading(true),
+    hideLoading: () => setIsLoading(false),
+    showError: (message) => setToast({ message, type: 'error' }),
+    showSuccess: (message) => setToast({ message, type: 'success' }),
+    navigateBack: (taskId, toastMessage) => {
+      navigation.navigate('MyDairyScreen', {
+        taskId,
+        toastMessage,
+      });
+    },
+    clearForm: () => {
+      setTitle('');
+      setContent('');
+      setSelectedMood(0);
+    },
+  } as DailyDairyView, diaryUseCases);
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', { 
@@ -52,46 +68,12 @@ const DailyDairyScreen: React.FC<DailyDairyScreenProps> = ({ navigation }) => {
   }
 
   const handleSave = async () => {
-    if (!title.trim() || !content.trim()) {
-      setToast({ message: "Please fill in both title and content", type: 'error' });
-      return
-    }
-
-    setIsLoading(true)
-    try {
-      // const userId = auth().currentUser?.uid
-      // if (!userId) {
-      //   throw new Error('User not authenticated')
-      // }
-
-      const docRef = await firestore().collection('diaries').add({
-        // userId,
-        title,
-        content,
-        mood: selectedMood,
-        date: selectedDate.toISOString(),
-        createdAt: firestore.FieldValue.serverTimestamp(),
-      })
-
-      setToast({ message: 'Your diary entry has been saved!', type: 'success' }); 
-      navigation.navigate('MyDairyScreen', { taskId: docRef.id });
-      // [
-      //   {
-      //     text: 'OK',
-      //     onPress: () => {
-      //       setTitle('')
-      //       setContent('')
-      //       setSelectedMood(0)
-            
-      //     },
-      //   },
-      // ]
-    } catch (error) {
-      Alert.alert('Error', 'Failed to save diary entry. Please try again.')
-      console.error('Save diary error:', error)
-    } finally {
-      setIsLoading(false)
-    }
+    await presenter.createDiary({
+      title,
+      content,
+      mood: selectedMood,
+      date: selectedDate.toISOString(),
+    });
   }
 
   return (
@@ -112,7 +94,11 @@ const DailyDairyScreen: React.FC<DailyDairyScreenProps> = ({ navigation }) => {
         </View>
       </View>
 
-      <TouchableOpacity style={styles.dateSelector} onPress={() => setShowDatePicker(true)}>
+      <TouchableOpacity 
+        testID="date-selector"
+        style={styles.dateSelector} 
+        onPress={() => setShowDatePicker(true)}
+      >
         <Icon name="chevron-left" size={24} color="#000" />
         <Text style={styles.dateText}>{formatDate(selectedDate)}</Text>
         <Icon name="chevron-right" size={24} color="#000" />
@@ -123,12 +109,14 @@ const DailyDairyScreen: React.FC<DailyDairyScreenProps> = ({ navigation }) => {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.inputContainer}>
           <TextInput
+          testID="title-input"
             style={styles.titleInput}
             placeholder="Heading here"
             value={title}
             onChangeText={setTitle}
           />
           <TextInput
+            testID="content-input"
             style={styles.contentInput}
             placeholder="Start typing..."
             value={content}
@@ -140,7 +128,7 @@ const DailyDairyScreen: React.FC<DailyDairyScreenProps> = ({ navigation }) => {
       </ScrollView>
 
       <View style={styles.moodSelector}>
-        {moods.map((mood) => (
+        {MOODS.map((mood) => (
           <TouchableOpacity
             key={mood.id}
             testID={`mood-${mood.icon.replace('sentiment-', '')}`}
@@ -160,6 +148,7 @@ const DailyDairyScreen: React.FC<DailyDairyScreenProps> = ({ navigation }) => {
       </View>
 
       <TouchableOpacity 
+       testID="save-button"
         style={[styles.saveButton, isLoading && { opacity: 0.7 }]} 
         onPress={handleSave}
         disabled={isLoading}
@@ -169,6 +158,7 @@ const DailyDairyScreen: React.FC<DailyDairyScreenProps> = ({ navigation }) => {
 
       {showDatePicker && (
         <DateTimePicker
+         testID="date-picker"
           value={selectedDate}
           mode="date"
           display="default"

@@ -252,7 +252,8 @@ export class HomePresenter {
                     ? `⏰ Starts in ${hours} hour${hours > 1 ? 's' : ''}` 
                     : `⏰ Starts in ${minutes} minute${minutes > 1 ? 's' : ''}`;
             } else {
-                const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                // const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
                 return diffDays === 1 ? `⏰ Starts tomorrow` : `⏰ Starts in ${diffDays} days`;
             }
         }

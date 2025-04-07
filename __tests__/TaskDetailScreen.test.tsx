@@ -2,7 +2,7 @@ import React from 'react';
 import { render, fireEvent, waitFor, act, RenderAPI, within } from '@testing-library/react-native';
 import firestore from '@react-native-firebase/firestore';
 import { Alert } from 'react-native';
-import TaskDetailScreen from '../src/screens/TaskDetail/TaskDetailScreen';
+import TaskDetailScreen from '../src/screens/MyDairy/MyDairyScreen';
 
 // Mock the navigation prop
 const mockNavigation = {

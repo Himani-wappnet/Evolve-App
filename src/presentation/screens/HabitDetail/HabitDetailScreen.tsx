@@ -36,7 +36,7 @@ const HabitDetailScreen: FC = () => {
     const [showStartDayPicker, setShowStartDayPicker] = useState(false);
     const [datePickerMode, setDatePickerMode] = useState<'start' | 'completion'>('start');
 
-    console.log('HABIT ID', JSON.stringify(habitId));
+    // console.log('HABIT ID', JSON.stringify(habitId));
     
 
     // Initialize presenter
@@ -260,6 +260,7 @@ const HabitDetailScreen: FC = () => {
                         {DAYS_OF_WEEK.map((day) => (
                             <TouchableOpacity
                                 key={day}
+                                testID={`day-button-${day}`}    
                                 style={[
                                     styles.dayButton,
                                     habit?.days.includes(day) && styles.selectedDay,
@@ -294,44 +295,27 @@ const HabitDetailScreen: FC = () => {
                 </View>
 
                 {showStartDayPicker && (
-                    // <DateTimePicker
-                    //     value={habit?.startDay || new Date()}
-                    //     mode="date"
-                    //     minimumDate={new Date()}
-                    //     display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    //     onChange={(event, date) => {
-                    //         setShowStartDayPicker(false);
-                    //         if (date) {
-                    //             handleStartDaySelect(date);
-                    //         }
-                    //     }}
-                    // />
                     <CustomDateTimePicker
-  visible={showStartDayPicker}
-  value={habit?.startDay || new Date()}
-  mode="date"
-  minimumDate={new Date()}
-  onChange={(event, date) => {
-    if (date) handleStartDaySelect(date);
-  }}
-  onClose={() => setShowStartDayPicker(false)}
-/>
+                        testID="custom-date-picker"
+                        visible={showStartDayPicker}
+                        value={habit?.startDay || new Date()}
+                        mode="date"
+                        minimumDate={new Date()}
+                        onChange={(event, date) => {
+                            if (date) handleStartDaySelect(date);
+                        }}
+                        onClose={() => setShowStartDayPicker(false)}
+                    />
                 )}
 
                 {showDatePicker && (
-                    // <DateTimePicker
-                    //     value={habit?.time || new Date()}
-                    //     mode="time"
-                    //     display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    //     onChange={handleTimeSelect}
-                    // />
                     <CustomDateTimePicker
-  visible={showDatePicker}
-  value={habit?.time || new Date()}
-  mode="time"
-  onChange={handleTimeSelect}
-  onClose={() => setShowDatePicker(false)}
-/>
+                        visible={showDatePicker}
+                        value={habit?.time || new Date()}
+                        mode="time"
+                        onChange={handleTimeSelect}
+                        onClose={() => setShowDatePicker(false)}
+                    />
                 )}
 
                 <CustomButton

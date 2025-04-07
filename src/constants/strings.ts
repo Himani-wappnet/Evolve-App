@@ -5,6 +5,9 @@ export const Strings = {
     Habit_Details: 'Habit Details',
     Dashboard: 'Dashboard',
     Create_Custom_Habit: 'Create Custom Habit',
+    Create_Diet_Plan: 'Create Diet Plan',
+    Puzzle_Alarm_System: 'Puzzle Alarm System',
+    Daily_Dairy: 'Daily Dairy',
     
     // Button Labels
     Save_Changes: 'Save Changes',

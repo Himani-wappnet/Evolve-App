@@ -161,6 +161,12 @@ const CreateHabitScreen: FC = () => {
                         <View style={styles.modalContent}>
                             <Text style={styles.modalTitle}>Create New Habit</Text>
 
+                            {error && (
+                                <Text testID="error-message" style={styles.errorText}>
+                                    {error}
+                                </Text>
+                            )}
+
                             <View style={styles.emojiSelectorContainer}>
                                 <TouchableOpacity
                                     style={styles.emojiSelectorButton}

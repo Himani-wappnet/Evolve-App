@@ -1,10 +1,6 @@
 import { StyleSheet } from 'react-native';
-import { Colors } from '../../constants/colors';
-import { spacing } from '../../constants/spacing';
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
-import { TextStyles } from '../../constants/textstyle';
-import { Dimens } from '../../constants/dimens';
-import layout from '../../utils/layout';
+import { Colors } from '../../../constants/colors';
 
 export const styles = StyleSheet.create({
   container: {
