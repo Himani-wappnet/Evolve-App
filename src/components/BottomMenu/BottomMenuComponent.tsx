@@ -63,10 +63,10 @@ const FloatingShopButton: React.FC = () => {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.option}
-            //  onPress={() => {
-            //   toggleModal(); 
-            //   navigation.navigate("AlarmScreen");
-            // }}
+             onPress={() => {
+              toggleModal(); 
+              navigation.navigate("AlarmScreen");
+            }}
             >
               <Text style={styles.bottomText}>{Strings.Puzzle_Alarm_System}</Text>
             </TouchableOpacity>

@@ -1,5 +1,5 @@
-import React from "react";
-import { NavigationContainer } from "@react-navigation/native";
+import React, { useEffect } from "react";
+import { NavigationContainer, useNavigation } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import LoginPage from "../screens/LoginScreen/LoginScreen";
 import SignupPage from "../screens/SignupScreen/SignUpScreen";
@@ -14,6 +14,7 @@ import DailyDairyScreen from "../presentation/screens/DailyDairy/DailyDairyScree
 import MyDairyScreen from "../presentation/screens/MyDairy/MyDairyScreen";
 import EditDiaryScreen from "../presentation/screens/EditDiary/EditDiaryScreen";
 import DiaryDetailScreen from "../presentation/screens/DiaryDetail/DiaryDetailScreen";
+import notifee, { EventType } from "@notifee/react-native";
 
 export type RootStackParamList = {
   SplashScreen: undefined;
@@ -36,9 +37,9 @@ export type RootStackParamList = {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-const AppNavigator = () => {
+const AppNavigator = ({ navigationRef }: { navigationRef: any }) => {
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator initialRouteName="LoginPage">
         <Stack.Screen name="LoginPage" component={LoginPage} options={{ headerShown: false }} />
         <Stack.Screen name="SignUpPage" component={SignupPage} options={{ headerShown: false }} />

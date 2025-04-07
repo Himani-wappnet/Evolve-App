@@ -1,12 +1,86 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import AppNavigator from './src/navigation/AppNavigator';
+import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
+import { navigationRef } from './src/navigation/navigationService';
+import { InteractionManager } from 'react-native';
 
 function App(): React.JSX.Element {
+
+  useEffect(() => {
+    async function setupChannel() {
+      await notifee.createChannel({
+        id: 'alarm',
+        name: 'Alarm Channel',
+        importance: AndroidImportance.HIGH, // Ensure high importance
+        sound: 'default', // or custom sound
+      });
+    }
   
-  return <AppNavigator />;
- 
+    setupChannel();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = notifee.onForegroundEvent(({ type, detail }) => {
+      if (type === EventType.PRESS || type === EventType.ACTION_PRESS) {
+        const alarmId = detail.notification?.id;
+        const puzzleType = detail.notification?.data?.puzzleType || 'math';
+
+        if (alarmId) {
+          navigationRef.current?.navigate('PuzzleScreen', {
+            alarmId,
+            puzzleType,
+          });
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    InteractionManager.runAfterInteractions(async () => {
+      const initialNotification = await notifee.getInitialNotification();
+      if (initialNotification) {
+        const { notification } = initialNotification;
+        const alarmId = notification.id;
+        const puzzleType = notification.data?.puzzleType;
+  
+        if (alarmId) {
+          console.log('Navigating to PuzzleScreen after cold start');
+          navigationRef.current?.navigate('PuzzleScreen', {
+            alarmId,
+            puzzleType,
+          });
+        }
+      }
+    });
+  }, []);
+
+  return <AppNavigator navigationRef={navigationRef} />;
 }
+
 export default App;
+
+  // useEffect(() => {
+  //   async function checkInitialNotification() {
+  //     const initialNotification = await notifee.getInitialNotification();
+  //     if (initialNotification) {
+  //       const { notification } = initialNotification;
+  //       const alarmId = notification.id;
+  //       const puzzleType = notification.data?.puzzleType;
+  
+  //       if (alarmId) {
+  //         console.log('Opening PuzzleScreen from background notification');
+  //         navigationRef.current?.navigate('PuzzleScreen', {
+  //           alarmId,
+  //           puzzleType,
+  //         });
+  //       }
+  //     }
+  //   };
+  //   checkInitialNotification();
+  // }, []);
+
 
 // import React, { useEffect, useState } from 'react';
 

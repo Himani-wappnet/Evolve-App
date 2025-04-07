@@ -15,6 +15,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { format } from 'date-fns';
+import { parse, isBefore, addDays } from 'date-fns';
 import notifee, { 
   TriggerType, 
   AndroidImportance, 
@@ -26,6 +27,8 @@ import notifee, {
 } from '@notifee/react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { styles } from './Styles';
+
+const Icon = MaterialIcons as any;
 
 type RootStackParamList = {
   Alarm: undefined;
@@ -55,161 +58,6 @@ const AlarmScreen: React.FC<AlarmScreenProps> = ({ navigation }) => {
     loadAlarms();
   }, []);
 
-  const stopAlarmSound = async (alarmId: string) => {
-    console.log("stopAlarmSound", alarmId);
-    await notifee.stopForegroundService(); // Stops any foreground service playing sound
-    await notifee.cancelNotification(alarmId); // Cancels the notification
-  };
-
-  // useEffect(() => {
-  //   const unsubscribeForeground = notifee.onForegroundEvent(async ({ type, detail }: Event) => {
-  //     console.log('Foreground event type:', EventType[type]);
-  //     console.log('Foreground event detail:', detail);
-      
-  //     // Handle different event types
-  //     switch (type) {
-  //       case EventType.TRIGGER_NOTIFICATION_CREATED:
-  //         console.log('Alarm has been scheduled');
-  //         // Check if this is the actual trigger time
-  //         if (detail.notification?.data?.alarmTime) {
-  //           const scheduledTime = new Date(detail.notification.data.alarmTime);
-  //           const now = new Date();
-            
-  //           // Only proceed if we're within 1 minute of the scheduled time
-  //           if (now >= scheduledTime) {
-  //             console.log('Alarm time reached - displaying notification');
-  //             await notifee.displayNotification({
-  //               id: detail.notification.id,
-  //               title: 'Wake Up! Time to Solve a Puzzle',
-  //               body: 'Tap to solve the puzzle and stop the alarm',
-  //               android: {
-  //                 channelId: 'alarm',
-  //                 importance: AndroidImportance.HIGH,
-  //                 sound: 'alarm',
-  //                 ongoing: true,
-  //                 category: AndroidCategory.ALARM,
-  //                 autoCancel: false,
-  //               },
-  //             });
-  //             navigation.navigate('PuzzleScreen', { alarmId: detail.notification.id });
-  //           } else {
-  //             console.log('Ignoring trigger - not at scheduled time');
-  //           }
-  //         }
-  //         break;
-
-  //       case EventType.PRESS:
-  //         if (detail.notification?.id) {
-  //           console.log('Notification pressed in foreground');
-  //           stopAlarmSound(detail.notification.id);
-  //           navigation.navigate('PuzzleScreen', { alarmId: detail.notification.id });
-  //         }
-  //         break;
-
-  //       default:
-  //         console.log('Unhandled event type:', EventType[type]);
-  //     }
-  //   });
-
-  //   const unsubscribeBackground = notifee.onBackgroundEvent(async ({ type, detail }: Event) => {
-  //     console.log('Background event type:', EventType[type]);
-  //     console.log('Background event detail:', detail);
-      
-  //     switch (type) {
-  //       case EventType.TRIGGER_NOTIFICATION_CREATED:
-  //         console.log('Trigger event received in background - checking if it\'s time to trigger');
-  //         if (detail.notification?.data?.alarmTime) {
-  //           const scheduledTime = new Date(detail.notification.data.alarmTime);
-  //           const now = new Date();
-            
-  //           // Only proceed if we're within 1 minute of the scheduled time
-  //           if (Math.abs(scheduledTime.getTime() - now.getTime()) < 60000) {
-  //             console.log('Alarm time reached in background - creating wake-up notification');
-  //             await notifee.displayNotification({
-  //               id: detail.notification.id,
-  //               title: 'Wake Up! Time to Solve a Puzzle',
-  //               body: 'Tap to solve the puzzle and stop the alarm',
-  //               android: {
-  //                 channelId: 'alarm',
-  //                 importance: AndroidImportance.HIGH,
-  //                 sound: 'alarm',
-  //                 ongoing: true,
-  //                 fullScreenAction: {
-  //                   id: 'puzzle',
-  //                   launchActivity: 'default',
-  //                 },
-  //                 pressAction: {
-  //                   id: 'puzzle',
-  //                   launchActivity: 'default',
-  //                 },
-  //                 category: AndroidCategory.ALARM,
-  //                 asForegroundService: true,
-  //                 autoCancel: false,
-  //               },
-  //             });
-  //           } else {
-  //             console.log('Ignoring background trigger - not at scheduled time');
-  //           }
-  //         }
-  //         break;
-
-  //       case EventType.PRESS:
-  //         if (detail?.notification?.id) {
-  //           console.log('Notification pressed in background');
-  //           stopAlarmSound(detail.notification.id);
-  //           const scheme = Platform.select({ ios: 'yourapp://', android: 'yourapp://' });
-  //           await Linking.openURL(`${scheme}puzzle/${detail.notification.id}`);
-  //         }
-  //         break;
-
-  //       default:
-  //         console.log('Unhandled background event type:', EventType[type]);
-  //     }
-  //   });
-
-  //   // Handle app state changes
-  //   const appStateSubscription = AppState.addEventListener('change', async (nextAppState: AppStateStatus) => {
-  //     if (nextAppState === 'active') {
-  //       // App has come to the foreground
-  //       const initialNotification = await notifee.getInitialNotification();
-  //       if (initialNotification?.notification?.id) {
-  //         // App was opened from a notification
-  //         navigation.navigate('PuzzleScreen', { alarmId: initialNotification.notification.id });
-  //       }
-  //     }
-  //   });
-  
-  //   return () => {
-  //     unsubscribeForeground();
-  //     unsubscribeBackground();
-  //     appStateSubscription.remove();
-  //   };
-  // }, [navigation]);
-
-  useEffect(() => {
-    const unsubscribeForeground = notifee.onForegroundEvent(async ({ type, detail }) => {
-      console.log('Foreground event:', EventType[type]);
-  
-      if (type === EventType.TRIGGER_NOTIFICATION_CREATED) {
-        console.log('Trigger notification fired!');
-  
-        navigation.navigate('PuzzleScreen', { alarmId: detail.notification.id });
-      }
-    });
-  
-    return () => {
-      unsubscribeForeground();
-    };
-  }, [navigation]);
-  
-  useEffect(() => {
-    const requestPermissions = async () => {
-      const settings = await notifee.requestPermission();
-      console.log("Notification permission settings:", settings);
-    };
-    requestPermissions();
-  }, []);
-
   useEffect(() => {
     async function requestPermissions() {
       const settings = await notifee.requestPermission();
@@ -220,6 +68,23 @@ const AlarmScreen: React.FC<AlarmScreenProps> = ({ navigation }) => {
       }
     }
     requestPermissions();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = notifee.onForegroundEvent(({ type, detail }) => {
+      if (
+        (type === EventType.PRESS || type === EventType.DELIVERED) &&
+        detail?.notification?.data?.puzzleType
+      ) {
+        const alarmId = detail.notification?.id;
+        const puzzleType = detail.notification.data.puzzleType;
+  
+        console.log('Navigating to PuzzleScreen automatically due to foreground notification...');
+        navigation.navigate('PuzzleScreen', { alarmId,puzzleType });
+      }
+    });
+  
+    return () => unsubscribe();
   }, []);
 
   const loadAlarms = async () => {
@@ -241,97 +106,58 @@ const AlarmScreen: React.FC<AlarmScreenProps> = ({ navigation }) => {
     }
   };
 
+
   const createTriggerNotification = async (alarm: Alarm) => {
-    const [hours, minutes] = alarm.time.split(':').map(Number);
-    console.log(`Setting alarm for ${alarm.time}`);
-
-    // Get current date and time
     const now = new Date();
-    
-    // Create alarm time for today
-    let alarmTime = new Date();
-    // Reset seconds and milliseconds to ensure exact timing
-    alarmTime.setHours(hours, minutes, 0, 0);
-
-    // Compare times by converting to minutes since midnight
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
-    const alarmMinutes = hours * 60 + minutes;
-
-    // If alarm time has already passed today or is within the next minute, set it for tomorrow
-    if (alarmMinutes <= currentMinutes) {
-      alarmTime.setDate(alarmTime.getDate() + 1);
+  
+    // Parse alarm time into a Date object
+    let alarmTime = parse(alarm.time, 'HH:mm', new Date());
+  
+    // If the alarm time has already passed today, schedule it for tomorrow
+    if (isBefore(alarmTime, now)) {
+      alarmTime = addDays(alarmTime, 1);
     }
-
-    console.log("Current time:", now.toLocaleString());
-    console.log("Alarm will trigger at:", alarmTime.toLocaleString());
-
-    // Create the channel first
-    await notifee.createChannel({
-      id: 'alarm',
-      name: 'Alarm Channel',
-      lights: false,
-      vibration: true,
-      importance: AndroidImportance.HIGH,
-      sound: 'alarm',
-      bypassDnd: true,
-    });
-
-    // Cancel any existing notification with this ID first
-    await notifee.cancelTriggerNotification(alarm.id);
-
     const trigger: TimestampTrigger = {
       type: TriggerType.TIMESTAMP,
       timestamp: alarmTime.getTime(),
-      alarmManager: true,
-      repeatFrequency: undefined, // Make sure there's no repeat
+      // Do not include alarmManager: true unless permission granted
     };
-
-    // Create the trigger notification
+  
+    // Create notification
     await notifee.createTriggerNotification(
       {
         id: alarm.id,
-        title: 'Alarm Scheduled',
-        body: `Alarm set for ${format(alarmTime, 'HH:mm')}`,
-        data: {
-          alarmTime: alarmTime.toISOString(),
-        },
+        title: 'Wake up!',
+        body: `It's ${alarm.time}, time to solve your ${alarm.puzzleType} puzzle!`,
         android: {
           channelId: 'alarm',
-          importance: AndroidImportance.DEFAULT,
-          ongoing: false,
+          smallIcon: 'ic_launcher', // Make sure this icon exists in `android/app/src/main/res`
+          sound: 'default',
           pressAction: {
-            id: 'default',
+            id: 'open-puzzle', // <--- Important!
+            launchActivity: 'default', // ← Required to launch app if killed
           },
-          showTimestamp: true,
+          fullScreenAction: {
+            id: 'open-puzzle',
+          },
+          importance: AndroidImportance.HIGH,
+          category: AndroidCategory.ALARM,
+          // fullScreenAction: { id: 'default' }, ← don't use unless using foreground service
+        },
+        data: {
+          puzzleType: alarm.puzzleType, // Pass data for puzzle screen
         },
       },
-      trigger,
+      trigger
     );
 
-    // Log the scheduled triggers for debugging
-    const triggers = await notifee.getTriggerNotifications();
-    console.log('Current scheduled triggers:', triggers.map(t => ({
-      id: t.notification.id,
-      scheduledTime: format(new Date((t.trigger as TimestampTrigger).timestamp), 'HH:mm:ss'),
-      trigger: t.trigger,
-    })));
-  };
-
-  const handleAddAlarm = async () => {
-    const newAlarm: Alarm = {
-      id: Date.now().toString(),
-      time: format(selectedTime, 'HH:mm'),
-      isEnabled: true,
-      puzzleType: 'math',
-      days: [],
-    };
-
-    const updatedAlarms = [...alarms, newAlarm];
-    setAlarms(updatedAlarms);
-    await saveAlarms(updatedAlarms);
-    await createTriggerNotification(newAlarm);
-    setShowTimePicker(false);
-  };
+      // Check scheduled notifications
+  const triggers = await notifee.getTriggerNotifications();
+  console.log('Scheduled notifications:', triggers.map(t => ({
+    id: t.notification.id,
+    time: new Date((t.trigger as TimestampTrigger).timestamp).toLocaleTimeString(),
+  })));
+};
 
   const toggleAlarm = async (id: string) => {
     const updatedAlarms = alarms.map(alarm => {
@@ -404,9 +230,19 @@ const AlarmScreen: React.FC<AlarmScreenProps> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <Text style={styles.headerTitle}>Alarms</Text>
+      </View> */}
+        <View style={styles.header}>
+        <TouchableOpacity testID="header-back-button" onPress={() => navigation.navigate('Dashboard')}>
+          <Icon name="arrow-back" size={24} color="#000" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Alarms</Text>
+        <TouchableOpacity onPress={() => {}}>
+          {/* <Icon name="star-border" size={24} color="#000" /> */}
+        </TouchableOpacity>
       </View>
+
 
       <FlatList
         data={alarms}
