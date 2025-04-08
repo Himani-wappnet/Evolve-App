@@ -1,27 +1,41 @@
 import React, { useEffect } from 'react';
 import AppNavigator from './src/navigation/AppNavigator';
-import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
+import notifee, {
+  AndroidImportance,
+  AndroidVisibility,
+  EventType,
+} from '@notifee/react-native';
 import { navigationRef } from './src/navigation/navigationService';
 import { InteractionManager } from 'react-native';
 
-function App(): React.JSX.Element {
+let notificationHandled = false;
 
+function App(): React.JSX.Element {
   useEffect(() => {
     async function setupChannel() {
       await notifee.createChannel({
         id: 'alarm',
         name: 'Alarm Channel',
-        importance: AndroidImportance.HIGH, // Ensure high importance
-        sound: 'default', // or custom sound
+        importance: AndroidImportance.HIGH,
+        sound: 'advertising',
+        vibration: true,
+        bypassDnd: true,
+        lights: true,
+        visibility: AndroidVisibility.PUBLIC,
       });
     }
-  
+
     setupChannel();
   }, []);
 
   useEffect(() => {
-    const unsubscribe = notifee.onForegroundEvent(({ type, detail }) => {
-      if (type === EventType.PRESS || type === EventType.ACTION_PRESS) {
+    const unsubscribe = notifee.onForegroundEvent(async ({ type, detail }) => {
+      if (
+        (type === EventType.PRESS || type === EventType.ACTION_PRESS) &&
+        !notificationHandled
+      ) {
+        notificationHandled = true;
+
         const alarmId = detail.notification?.id;
         const puzzleType = detail.notification?.data?.puzzleType || 'math';
 
@@ -30,6 +44,9 @@ function App(): React.JSX.Element {
             alarmId,
             puzzleType,
           });
+
+          await notifee.cancelNotification(alarmId);
+          await notifee.stopForegroundService();
         }
       }
     });
@@ -40,17 +57,22 @@ function App(): React.JSX.Element {
   useEffect(() => {
     InteractionManager.runAfterInteractions(async () => {
       const initialNotification = await notifee.getInitialNotification();
-      if (initialNotification) {
+      if (initialNotification && !notificationHandled) {
+        notificationHandled = true;
+
         const { notification } = initialNotification;
         const alarmId = notification.id;
         const puzzleType = notification.data?.puzzleType;
-  
+
         if (alarmId) {
           console.log('Navigating to PuzzleScreen after cold start');
           navigationRef.current?.navigate('PuzzleScreen', {
             alarmId,
             puzzleType,
           });
+
+          await notifee.cancelNotification(alarmId);
+          await notifee.stopForegroundService();
         }
       }
     });
@@ -60,6 +82,7 @@ function App(): React.JSX.Element {
 }
 
 export default App;
+
 
   // useEffect(() => {
   //   async function checkInitialNotification() {

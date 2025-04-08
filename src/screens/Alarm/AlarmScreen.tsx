@@ -10,6 +10,8 @@ import {
   AppState,
   AppStateStatus,
   Linking,
+  BackHandler,
+  Modal,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -24,15 +26,17 @@ import notifee, {
   TimestampTrigger,
   Event,
   TriggerNotification,
+  AndroidVisibility,
 } from '@notifee/react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { styles } from './Styles';
+import { useFocusEffect } from '@react-navigation/native';
 
 const Icon = MaterialIcons as any;
 
 type RootStackParamList = {
   Alarm: undefined;
-  PuzzleScreen: { alarmId: string };
+  PuzzleScreen: { alarmId: string, puzzleType: string };
 };
 
 type AlarmScreenProps = {
@@ -43,7 +47,7 @@ type Alarm = {
   id: string;
   time: string;
   isEnabled: boolean;
-  puzzleType: 'math' | 'pattern' | 'memory';
+  puzzleType: 'math' | 'block';
   days: string[];
 };
 
@@ -53,6 +57,21 @@ const AlarmScreen: React.FC<AlarmScreenProps> = ({ navigation }) => {
   const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [selectedTime, setSelectedTime] = useState(new Date());
+  const [showPuzzleTypeModal, setShowPuzzleTypeModal] = useState(false);
+const [tempAlarmTime, setTempAlarmTime] = useState<Date | null>(null);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        // Block back button
+        return true;
+      };
+  
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+  
+      return () => subscription.remove();
+    }, [])
+  );
 
   useEffect(() => {
     loadAlarms();
@@ -120,7 +139,7 @@ const AlarmScreen: React.FC<AlarmScreenProps> = ({ navigation }) => {
     const trigger: TimestampTrigger = {
       type: TriggerType.TIMESTAMP,
       timestamp: alarmTime.getTime(),
-      // Do not include alarmManager: true unless permission granted
+      // alarmManager: true, // This ensures the alarm works even when app is killed
     };
   
     // Create notification
@@ -131,21 +150,27 @@ const AlarmScreen: React.FC<AlarmScreenProps> = ({ navigation }) => {
         body: `It's ${alarm.time}, time to solve your ${alarm.puzzleType} puzzle!`,
         android: {
           channelId: 'alarm',
-          smallIcon: 'ic_launcher', // Make sure this icon exists in `android/app/src/main/res`
-          sound: 'default',
+          smallIcon: 'ic_launcher',
+          sound: 'advertising',
           pressAction: {
-            id: 'open-puzzle', // <--- Important!
-            launchActivity: 'default', // ← Required to launch app if killed
+            id: 'open-puzzle',
+            launchActivity: 'default',
           },
           fullScreenAction: {
             id: 'open-puzzle',
           },
           importance: AndroidImportance.HIGH,
           category: AndroidCategory.ALARM,
-          // fullScreenAction: { id: 'default' }, ← don't use unless using foreground service
+          ongoing: true, // Makes the notification persistent
+          autoCancel: false, // Prevents notification from auto-canceling
+          loopSound: true, // Makes the sound loop continuously
+          visibility: AndroidVisibility.PUBLIC,
+          // Add vibration pattern for more attention
+          // vibrationPattern: [0, 1000, 1000, 1000, 1000],
+          timestamp: alarmTime.getTime(),
         },
         data: {
-          puzzleType: alarm.puzzleType, // Pass data for puzzle screen
+          puzzleType: alarm.puzzleType,
         },
       },
       trigger
@@ -265,28 +290,74 @@ const AlarmScreen: React.FC<AlarmScreenProps> = ({ navigation }) => {
           display="default"
           onChange={(event, date) => {
             setShowTimePicker(false);
-            if (event.type === 'set' && date) {
-              // Create the alarm with the date directly from the picker
-              const newAlarm: Alarm = {
-                id: Date.now().toString(),
-                time: format(date, 'HH:mm'),
-                isEnabled: true,
-                puzzleType: 'math',
-                days: [],
-              };
+            // if (event.type === 'set' && date) {
+            //   // Create the alarm with the date directly from the picker
+            //   const newAlarm: Alarm = {
+            //     id: Date.now().toString(),
+            //     time: format(date, 'HH:mm'),
+            //     isEnabled: true,
+            //     puzzleType: 'math',
+            //     days: [],
+            //   };
+            //   setShowPuzzleTypeModal(true); // Show puzzle type modal
 
-              // Update state and create notification
-              setAlarms(prevAlarms => {
-                const updatedAlarms = [...prevAlarms, newAlarm];
-                // Save alarms and create notification after state update
-                saveAlarms(updatedAlarms);
-                createTriggerNotification(newAlarm);
-                return updatedAlarms;
-              });
+            //   // Update state and create notification
+            //   setAlarms(prevAlarms => {
+            //     const updatedAlarms = [...prevAlarms, newAlarm];
+            //     // Save alarms and create notification after state update
+            //     saveAlarms(updatedAlarms);
+            //     createTriggerNotification(newAlarm);
+            //     return updatedAlarms;
+            //   });
+            // }
+            if (event.type === 'set' && date) {
+              setTempAlarmTime(date);
+              setShowPuzzleTypeModal(true); // Open puzzle type modal
             }
+            
           }}
         />
       )}
+
+<Modal visible={showPuzzleTypeModal} transparent animationType="slide">
+  <View style={styles.modalContainer}>
+    <View style={styles.modalContent}>
+      <Text style={styles.modalTitle}>Choose Puzzle Type</Text>
+
+      {['math', 'block'].map(type => (
+        <TouchableOpacity
+          key={type}
+          style={styles.modalButton}
+          onPress={() => {
+            if (tempAlarmTime) {
+              const newAlarm: Alarm = {
+                id: Date.now().toString(),
+                time: format(tempAlarmTime, 'HH:mm'),
+                isEnabled: true,
+                puzzleType: type as Alarm['puzzleType'],
+                days: [],
+              };
+
+              const updatedAlarms = [...alarms, newAlarm];
+              setAlarms(updatedAlarms);
+              saveAlarms(updatedAlarms);
+              createTriggerNotification(newAlarm);
+              setTempAlarmTime(null);
+            }
+            setShowPuzzleTypeModal(false);
+          }}
+        >
+          <Text style={styles.modalButtonText}>{type.toUpperCase()}</Text>
+        </TouchableOpacity>
+      ))}
+
+      <TouchableOpacity onPress={() => setShowPuzzleTypeModal(false)}>
+        <Text style={{ color: 'red', marginTop: 10 }}>Cancel</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
+
     </View>
   );
 };

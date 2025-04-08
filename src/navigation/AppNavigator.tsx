@@ -50,7 +50,10 @@ const AppNavigator = ({ navigationRef }: { navigationRef: any }) => {
         <Stack.Screen name="MyDairyScreen" component={MyDairyScreen} options={{ headerShown: false }} />
         <Stack.Screen name="EditTask" component={EditDiaryScreen} options={{ headerShown: false }} />
         <Stack.Screen name="AlarmScreen" component={AlarmScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="PuzzleScreen" component={PuzzleScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="PuzzleScreen" component={PuzzleScreen} options={{ headerShown: false,
+          gestureEnabled: false,
+          headerBackVisible: false, // iOS back button  
+         }} />
         <Stack.Screen name="DiaryDetail" component={DiaryDetailScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>

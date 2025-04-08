@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,10 +7,12 @@ import {
   Alert,
   StyleSheet,
   Vibration,
+  BackHandler,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import notifee from '@notifee/react-native';
 import Sound from 'react-native-sound';
+import { useFocusEffect } from '@react-navigation/native';
 
 type RootStackParamList = {
   Alarm: undefined;
@@ -19,8 +21,7 @@ type RootStackParamList = {
 
 type PuzzleScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'PuzzleScreen'>;
-  route: { params: { alarmId: string } };
-};
+  route: { params: { alarmId: string; puzzleType: 'math' | 'block' } };};
 
 // Math puzzle generator
 const generateMathPuzzle = () => {
@@ -56,11 +57,48 @@ const generateMathPuzzle = () => {
   };
 };
 
+const generateBlockPuzzle = () => {
+  const numbers = Array.from({ length: 9 }, (_, i) => i + 1);
+  for (let i = numbers.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+  }
+  return numbers;
+};
+
 const PuzzleScreen: React.FC<PuzzleScreenProps> = ({ navigation, route }) => {
+  const { alarmId, puzzleType } = route.params;
+
   const [puzzle, setPuzzle] = useState(generateMathPuzzle());
   const [answer, setAnswer] = useState('');
   const [attempts, setAttempts] = useState(0);
   const [alarm, setAlarm] = useState<Sound | null>(null);
+  const alarmRef = useRef<Sound | null>(null);
+  const [blocks, setBlocks] = useState<number[]>(generateBlockPuzzle());
+const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+const [errorText, setErrorText] = useState('');
+
+useEffect(() => {
+  if (puzzleType === 'math') {
+    setPuzzle(generateMathPuzzle());
+  } else if (puzzleType === 'block') {
+    setBlocks(generateBlockPuzzle());
+  }
+}, [puzzleType]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        // Block back button
+        return true;
+      };
+  
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+  
+      return () => subscription.remove();
+    }, [])
+  );
+
 
   useEffect(() => {
     // Initialize alarm sound
@@ -71,7 +109,8 @@ const PuzzleScreen: React.FC<PuzzleScreenProps> = ({ navigation, route }) => {
       }
       sound.setNumberOfLoops(-1); // Loop indefinitely
       sound.play();
-      setAlarm(sound);
+      alarmRef.current = sound;
+      // setAlarm(sound);
     });
 
     // Start vibration pattern
@@ -79,27 +118,21 @@ const PuzzleScreen: React.FC<PuzzleScreenProps> = ({ navigation, route }) => {
     Vibration.vibrate(PATTERN, true);
 
     return () => {
-      if (alarm) {
-        alarm.stop();
-        alarm.release();
-      }
+      alarmRef.current?.stop();
+      alarmRef.current?.release();
       Vibration.cancel();
     };
   }, []);
-
   const handleSubmit = () => {
     if (answer === puzzle.answer) {
       // Stop alarm and vibration
-      if (alarm) {
-        alarm.stop();
-        alarm.release();
-      }
+      alarmRef.current?.stop();
+      alarmRef.current?.release();
       Vibration.cancel();
-
+  
       // Cancel notification
       notifee.cancelTriggerNotification(route.params.alarmId);
-
-      // Show success message and navigate back
+  
       Alert.alert('Good Morning!', 'You solved the puzzle!', [
         {
           text: 'OK',
@@ -110,35 +143,96 @@ const PuzzleScreen: React.FC<PuzzleScreenProps> = ({ navigation, route }) => {
       setAttempts(prev => prev + 1);
       setAnswer('');
       if (attempts >= 2) {
-        // After 3 wrong attempts, generate a new puzzle
         setPuzzle(generateMathPuzzle());
         setAttempts(0);
       }
     }
   };
 
+  const isSolved = (arr: number[]) => arr.every((val, idx) => val === idx + 1);
+
+const handleBlockPress = (index: number) => {
+  if (selectedIndex === null) {
+    setSelectedIndex(index);
+  } else {
+    const newBlocks = [...blocks];
+    [newBlocks[selectedIndex], newBlocks[index]] = [
+      newBlocks[index],
+      newBlocks[selectedIndex],
+    ];
+    setBlocks(newBlocks);
+    setSelectedIndex(null);
+
+    if (isSolved(newBlocks)) {
+      setErrorText('');
+      Alert.alert('Well Done!', 'You solved the block puzzle.', [
+        {
+          text: 'OK',
+          onPress: () => navigation.navigate('AlarmScreen'),
+        },
+      ]);
+      alarmRef.current?.stop();
+      alarmRef.current?.release();
+      Vibration.cancel();
+      notifee.cancelTriggerNotification(route.params.alarmId);
+    }
+    else {
+      setErrorText('Not solved yet! Keep arranging.');
+    }
+  }
+};
+  
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Solve to Stop the Alarm</Text>
-      <View style={styles.puzzleContainer}>
-        <Text style={styles.puzzleText}>{puzzle.question}</Text>
-        <TextInput
-          style={styles.input}
-          keyboardType="numeric"
-          value={answer}
-          onChangeText={setAnswer}
-          placeholder="Enter your answer"
-          placeholderTextColor="#666"
-        />
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitButtonText}>Submit</Text>
+
+      {puzzleType === 'math' ? (
+  <>
+    <Text style={styles.puzzleText}>{puzzle.question}</Text>
+    <TextInput
+      style={styles.input}
+      keyboardType="numeric"
+      value={answer}
+      onChangeText={setAnswer}
+      placeholder="Enter your answer"
+      placeholderTextColor="#666"
+    />
+    <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+      <Text style={styles.submitButtonText}>Submit</Text>
+    </TouchableOpacity>
+    {attempts > 0 && (
+      <Text style={styles.attemptsText}>
+        Wrong answer! Attempts remaining: {3 - attempts}
+      </Text>
+    )}
+  </>
+) : (
+  <>
+    <Text style={styles.puzzleQuestionText}>
+      Arrange the numbers from 1 to 9 in order
+    </Text>
+    {errorText ? (
+      <Text style={styles.errorText}>{errorText}</Text>
+    ) : null}
+
+    <View style={styles.grid}>
+      {blocks.map((number, index) => (
+        <TouchableOpacity
+          key={index}
+          style={[
+            styles.block,
+            selectedIndex === index && styles.selectedBlock,
+          ]}
+          onPress={() => handleBlockPress(index)}
+        >
+          <Text style={styles.blockText}>{number}</Text>
         </TouchableOpacity>
-      </View>
-      {attempts > 0 && (
-        <Text style={styles.attemptsText}>
-          Wrong answer! Attempts remaining: {3 - attempts}
-        </Text>
-      )}
+      ))}
+    </View>
+  </>
+)}
+
     </View>
   );
 };
@@ -200,6 +294,45 @@ const styles = StyleSheet.create({
     marginTop: 20,
     fontSize: 16,
   },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    marginTop: 40,
+  },
+  block: {
+    width: 80,
+    height: 80,
+    backgroundColor: '#4D96FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 5,
+    borderRadius: 8,
+  },
+  selectedBlock: {
+    backgroundColor: '#FF6B6B',
+  },
+  blockText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  puzzleQuestionText: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#333',
+    textAlign: 'center',
+    marginTop: 10,
+  },
+  
+  errorText: {
+    fontSize: 16,
+    color: '#FF6B6B',
+    textAlign: 'center',
+    marginTop: 10,
+  },
+  
+  
 });
 
 export default PuzzleScreen; 
