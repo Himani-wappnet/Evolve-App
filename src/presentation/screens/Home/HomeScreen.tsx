@@ -146,11 +146,12 @@ const HomeScreen = () => {
                 horizontal 
                 showsHorizontalScrollIndicator={false}
                 style={styles.daysContainer}
+                testID="scroll-view"
             >
                 {weekDays.map((day, index) => (
                     <TouchableOpacity
                         key={index}
-                        testID="day-button"
+                        testID={`day-button-${index}`}
                         style={[
                             styles.dayButton,
                             format(day, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd') && styles.selectedDay
@@ -215,7 +216,7 @@ const HomeScreen = () => {
         if (loading) {
             return (
                 <View style={styles.loaderContainer}>
-                    <ActivityIndicator testID="loader" size="large" color={Colors.primary} />
+                    <ActivityIndicator testID="initial-loader" size="large" color={Colors.primary} />
                 </View>
             );
         }
@@ -230,7 +231,8 @@ const HomeScreen = () => {
                         {hasMore && (
                             <TouchableOpacity 
                                 style={styles.viewAllButton}
-                                onPress={loadMoreHabits}>
+                                onPress={loadMoreHabits}
+                                testID="view-all-button">
                                 <Text style={styles.viewAllText}>VIEW ALL</Text>
                             </TouchableOpacity>
                         )}
@@ -249,27 +251,24 @@ const HomeScreen = () => {
                     }
                 >
                     {operationLoading ? (
-            <View style={styles.loadingMoreContainer}>
-              <ActivityIndicator testID="loader" size="large" color={Colors.primary} />
-            </View>
-          ) :
-                    displayedHabits.length === 0 ? (
+                        <View style={styles.loadingMoreContainer}>
+                            <ActivityIndicator testID="loading-more" size="large" color={Colors.primary} />
+                        </View>
+                    ) : displayedHabits.length === 0 ? (
                         <View style={styles.noHabitsContainer}>
                             <Text style={styles.noHabitsText}>No habits scheduled for this day</Text>
                         </View>
                     ) : (
                         <>
                             {displayedHabits.map((habit) => (
-                                console.log('DISPLAYHABITTTTT',JSON.stringify(habit)),
-                                
                                 <TouchableOpacity
                                     key={habit.id}
+                                    testID={`habit-card-${habit.id}`}
                                     style={styles.habitCard}
                                     onPress={() => navigation.navigate('HabitDetail', { 
                                         habitId: habit,
-                                        // habitId: habit.id,
-                                        // habitName: habit.name,
-                                        // habitIcon: habit.icon
+                                        habitName: habit.name,
+                                        habitIcon: habit.emoji
                                     })}
                                 >
                                     <View style={styles.habitLeft}>
@@ -300,7 +299,7 @@ const HomeScreen = () => {
                                                 style={styles.completeButton}
                                                 onPress={() => handleComplete(habit)}
                                                 disabled={operationLoading}>
-                                            <MaterialCommunityIcons name="check-circle-outline" size={24} color={Colors.palette.primary600} />
+                                                <MaterialCommunityIcons name="check-circle-outline" size={24} color={Colors.palette.primary600} />
                                             </TouchableOpacity>
                                         )}
                                         <TouchableOpacity
@@ -313,11 +312,6 @@ const HomeScreen = () => {
                                     </View>
                                 </TouchableOpacity>
                             ))}
-                            {/* {loadingMore && (
-                                <View style={styles.loadingMoreContainer}>
-                                    <ActivityIndicator size="small" color={Colors.primary} />
-                                </View>
-                            )} */}
                         </>
                     )}
                 </ScrollView>
@@ -333,13 +327,14 @@ const HomeScreen = () => {
     return (
         <ScrollView 
             style={styles.container}
-            testID="scroll-view"
+            testID="main-scroll-view"
         >
             {toast && (
                 <Toast
                     message={toast.message}
                     type={toast.type}
                     onHide={() => setToast(null)}
+                    testID="toast-message"
                 />
             )}
             {renderHeader()}

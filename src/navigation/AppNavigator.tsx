@@ -6,8 +6,8 @@ import SignupPage from "../screens/SignupScreen/SignUpScreen";
 import Dashboard from "../screens/Dashboard/Dashboard";
 // import CreateHabitScreen from "../screens/CreateHabit/CreateHabitScreen";
 // import HabitDetailScreen from '../screens/HabitDetail/HabitDetailScreen';
-import AlarmScreen from "../screens/Alarm/AlarmScreen";
-import PuzzleScreen from "../screens/Alarm/PuzzleScreen";
+// import AlarmScreen from "../screens/Alarm/AlarmScreen";
+// import PuzzleScreen from "../screens/Alarm/PuzzleScreen";
 import CreateHabitScreen from "../presentation/screens/CreateHabit/CreateHabitScreen";
 import HabitDetailScreen from "../presentation/screens/HabitDetail/HabitDetailScreen";
 import DailyDairyScreen from "../presentation/screens/DailyDairy/DailyDairyScreen";
@@ -15,6 +15,8 @@ import MyDairyScreen from "../presentation/screens/MyDairy/MyDairyScreen";
 import EditDiaryScreen from "../presentation/screens/EditDiary/EditDiaryScreen";
 import DiaryDetailScreen from "../presentation/screens/DiaryDetail/DiaryDetailScreen";
 import notifee, { EventType } from "@notifee/react-native";
+import AlarmScreen from "../presentation/screens/Alarm/AlarmScreen";
+import PuzzleScreen from "../presentation/screens/Puzzle/PuzzleScreen";
 
 export type RootStackParamList = {
   SplashScreen: undefined;
