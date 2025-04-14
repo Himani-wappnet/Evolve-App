@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import AppNavigator from './src/navigation/AppNavigator';
 import notifee, {
   AndroidImportance,
@@ -6,11 +6,69 @@ import notifee, {
   EventType,
 } from '@notifee/react-native';
 import { navigationRef } from './src/navigation/navigationService';
-import { InteractionManager } from 'react-native';
+import { Alert, Button, InteractionManager, Linking, NativeModules, Platform, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BlockedScreen } from './src/components/BlockedScreen';
+
+const { AdminModule, UsageStatsModule,UsageAccessModule } = NativeModules;
 
 let notificationHandled = false;
 
+
+// const isInRestrictedTime = (startISO: string, endISO: string) => {
+//   const now = new Date();
+//   const start = new Date(startISO);
+//   const end = new Date(endISO);
+
+//   const nowMinutes = now.getHours() * 60 + now.getMinutes();
+//   const startMinutes = start.getHours() * 60 + start.getMinutes();
+//   const endMinutes = end.getHours() * 60 + end.getMinutes();
+
+//   if (startMinutes < endMinutes) {
+//     return nowMinutes >= startMinutes && nowMinutes <= endMinutes;
+//   } else {
+//     // Restriction spans midnight
+//     return nowMinutes >= startMinutes || nowMinutes <= endMinutes;
+//   }
+// };
+
 function App(): React.JSX.Element {
+
+  // const [isBlocked, setIsBlocked] = useState(false);
+  // const [loading, setLoading] = useState(true);
+
+  // const openUsageAccessSettings = () => {
+  //   if (Platform.OS === 'android') {
+  //     Linking.openSettings(); // Opens the app settings directly
+  //     // Optionally: Use a native module or intent to open USAGE_ACCESS_SETTINGS directly
+  //   }
+  // };
+
+//USAGE SETTING
+    // useEffect(() => {
+    //   if (Platform.OS === 'android') {
+    //     UsageAccessModule.openUsageAccessSettings();
+    //   }
+    // }, []);
+
+    // Restriction time check
+    // useEffect(() => {
+    //   const checkRestriction = async () => {
+    //     const restriction = await AsyncStorage.getItem('RESTRICTION_TIME');
+    //     if (restriction) {
+    //       const { startTime, endTime } = JSON.parse(restriction);
+    //       const blocked = isInRestrictedTime(startTime, endTime);
+    //       setIsBlocked(blocked);
+    //     }
+    //     setLoading(false);
+    //   };
+  
+    //   checkRestriction();
+    //   const interval = setInterval(checkRestriction, 60000); // Check every minute
+    //   return () => clearInterval(interval);
+    // }, []);
+
+      // Setup notification channel
   useEffect(() => {
     async function setupChannel() {
       await notifee.createChannel({
@@ -28,6 +86,7 @@ function App(): React.JSX.Element {
     setupChannel();
   }, []);
 
+    // Foreground notification handling
   useEffect(() => {
     const unsubscribe = notifee.onForegroundEvent(async ({ type, detail }) => {
       if (
@@ -54,6 +113,7 @@ function App(): React.JSX.Element {
     return () => unsubscribe();
   }, []);
 
+  // Cold start notification handling
   useEffect(() => {
     InteractionManager.runAfterInteractions(async () => {
       const initialNotification = await notifee.getInitialNotification();
@@ -78,7 +138,40 @@ function App(): React.JSX.Element {
     });
   }, []);
 
+
+  // if (loading) return null;
+
+  // if (isBlocked) {
+  //   return <BlockedScreen />;
+  // }
+
+  // const enableAdmin = () => {
+  //   console.log('enableAdmin');
+    
+  //   AdminModule.activateAdmin();
+  // };
+
+  
+
+  // const fetchUsageStats = () => {
+  //   UsageStatsModule.getUsageStats({}, (err, result) => {
+  //     if (err) {
+  //       console.warn("Error getting stats", err);
+  //     } else {
+  //       console.log("App Usage Stats:", JSON.stringify(result, null, 2));
+  //       Alert.alert(JSON.stringify(result, null, 2));
+  //     }
+  //   });
+  // };
+
   return <AppNavigator navigationRef={navigationRef} />;
+  // return (
+  //   <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+  //     <Button title="Enable Admin Access" onPress={enableAdmin} />
+  //     <Button title="Get App Usage Info" onPress={fetchUsageStats} />
+
+  //   </View>
+  // );
 }
 
 export default App;

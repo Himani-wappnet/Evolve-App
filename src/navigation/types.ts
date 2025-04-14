@@ -29,6 +29,7 @@ export type RootStackParamList = {
             startDay: Date;
         };
     };
+    MobileAddiction: undefined;
 };
 
 export type MainTabParamList = {

@@ -17,6 +17,7 @@ import DiaryDetailScreen from "../presentation/screens/DiaryDetail/DiaryDetailSc
 import notifee, { EventType } from "@notifee/react-native";
 import AlarmScreen from "../presentation/screens/Alarm/AlarmScreen";
 import PuzzleScreen from "../presentation/screens/Puzzle/PuzzleScreen";
+import MobileAddictionScreen from "../presentation/screens/MobileAddiction/MobileAddictionScreen";
 
 export type RootStackParamList = {
   SplashScreen: undefined;
@@ -35,6 +36,7 @@ export type RootStackParamList = {
   PuzzleScreen: { alarmId: string };
   MyDairyScreen: undefined;
   DiaryDetail: { taskId: string };
+  MobileAddiction: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -57,6 +59,7 @@ const AppNavigator = ({ navigationRef }: { navigationRef: any }) => {
           headerBackVisible: false, // iOS back button  
          }} />
         <Stack.Screen name="DiaryDetail" component={DiaryDetailScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="MobileAddiction" component={MobileAddictionScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

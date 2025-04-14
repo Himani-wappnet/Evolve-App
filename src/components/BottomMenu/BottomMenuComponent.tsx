@@ -89,7 +89,14 @@ const FloatingShopButton: React.FC = () => {
           <View style={styles.bottomSheet}>
 
             <View style={styles.row}>
-              <TouchableOpacity style={[styles.card, styles.quitHabit]}>
+              <TouchableOpacity 
+                style={[styles.card, styles.quitHabit]}
+                onPress={() => {
+                  toggleNestedModal(); // Close Nested Modal
+                  toggleModal(); // Close Main Modal
+                  navigation.navigate("MobileAddiction");
+                }}
+              >
                 <Text style={styles.title}>Quit Bad Habit</Text>
                 <Text style={styles.description}>Never too late...</Text>
                 <View style={styles.iconContainer}>
