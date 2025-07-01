@@ -34,7 +34,7 @@ export const styles = StyleSheet.create({
         padding: 12,
         fontSize: 16,
         color: Colors.text,
-        minHeight: 100,
+        // minHeight: 100,
         textAlignVertical: 'top',
     },
     timeButton: {

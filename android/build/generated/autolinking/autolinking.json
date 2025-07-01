@@ -182,6 +182,33 @@
         }
       }
     },
+    "@react-native-google-signin/google-signin": {
+      "root": "/home/wappnet-04/Documents/reactprojects/Evolve-App/node_modules/@react-native-google-signin/google-signin",
+      "name": "@react-native-google-signin/google-signin",
+      "platforms": {
+        "ios": {
+          "podspecPath": "/home/wappnet-04/Documents/reactprojects/Evolve-App/node_modules/@react-native-google-signin/google-signin/RNGoogleSignin.podspec",
+          "version": "13.2.0",
+          "configurations": [],
+          "scriptPhases": []
+        },
+        "android": {
+          "sourceDir": "/home/wappnet-04/Documents/reactprojects/Evolve-App/node_modules/@react-native-google-signin/google-signin/android",
+          "packageImportPath": "import com.reactnativegooglesignin.RNGoogleSigninPackage;",
+          "packageInstance": "new RNGoogleSigninPackage()",
+          "buildTypes": [],
+          "libraryName": "RNGoogleSignInCGen",
+          "componentDescriptors": [
+            "RNGoogleSigninButtonComponentDescriptor"
+          ],
+          "cmakeListsPath": "/home/wappnet-04/Documents/reactprojects/Evolve-App/node_modules/@react-native-google-signin/google-signin/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cxxModuleCMakeListsModuleName": null,
+          "cxxModuleCMakeListsPath": null,
+          "cxxModuleHeaderName": null,
+          "isPureCxxDependency": false
+        }
+      }
+    },
     "@react-native-voice/voice": {
       "root": "/home/wappnet-04/Documents/reactprojects/Evolve-App/node_modules/@react-native-voice/voice",
       "name": "@react-native-voice/voice",
@@ -199,6 +226,33 @@
           "buildTypes": [],
           "componentDescriptors": [],
           "cmakeListsPath": "/home/wappnet-04/Documents/reactprojects/Evolve-App/node_modules/@react-native-voice/voice/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cxxModuleCMakeListsModuleName": null,
+          "cxxModuleCMakeListsPath": null,
+          "cxxModuleHeaderName": null,
+          "isPureCxxDependency": false
+        }
+      }
+    },
+    "lottie-react-native": {
+      "root": "/home/wappnet-04/Documents/reactprojects/Evolve-App/node_modules/lottie-react-native",
+      "name": "lottie-react-native",
+      "platforms": {
+        "ios": {
+          "podspecPath": "/home/wappnet-04/Documents/reactprojects/Evolve-App/node_modules/lottie-react-native/lottie-react-native.podspec",
+          "version": "7.2.2",
+          "configurations": [],
+          "scriptPhases": []
+        },
+        "android": {
+          "sourceDir": "/home/wappnet-04/Documents/reactprojects/Evolve-App/node_modules/lottie-react-native/android",
+          "packageImportPath": "import com.airbnb.android.react.lottie.LottiePackage;",
+          "packageInstance": "new LottiePackage()",
+          "buildTypes": [],
+          "libraryName": "lottiereactnative",
+          "componentDescriptors": [
+            "LottieAnimationViewComponentDescriptor"
+          ],
+          "cmakeListsPath": "/home/wappnet-04/Documents/reactprojects/Evolve-App/node_modules/lottie-react-native/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,

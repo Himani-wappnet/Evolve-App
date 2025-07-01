@@ -35,9 +35,22 @@ const HabitDetailScreen: FC = () => {
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const [showStartDayPicker, setShowStartDayPicker] = useState(false);
     const [datePickerMode, setDatePickerMode] = useState<'start' | 'completion'>('start');
-
+    const slideAnim = useRef(new Animated.Value(50)).current;
     // console.log('HABIT ID', JSON.stringify(habitId));
-    
+    useEffect(() => {
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 600,
+                useNativeDriver: true,
+            }),
+            Animated.spring(slideAnim, {
+                toValue: 0,
+                friction: 8,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    }, []);
 
     // Initialize presenter
     const presenter = React.useMemo(() => {
@@ -176,6 +189,16 @@ const HabitDetailScreen: FC = () => {
         }
     };
 
+    useEffect(() => {
+        if (showDurationPicker) {
+            Animated.spring(fadeAnim, {
+                toValue: 1,
+                friction: 5,
+                useNativeDriver: true,
+            }).start();
+        }
+    }, [showDurationPicker]);
+
     return (
         <View style={styles.container}>
             {toast && (
@@ -192,6 +215,16 @@ const HabitDetailScreen: FC = () => {
             />
             
             <ScrollView style={styles.content}>
+                
+            {/* <Animated.ScrollView
+    style={[
+        styles.content,
+        {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+        }
+    ]}
+> */}
                 <View style={styles.header}>
                     <LabelComponent value={`${habit?.emoji} ${habit?.name}`} style={styles.habitTitle} />
                 </View>
@@ -265,7 +298,14 @@ const HabitDetailScreen: FC = () => {
                                     styles.dayButton,
                                     habit?.days.includes(day) && styles.selectedDay,
                                 ]}
-                                onPress={() => toggleDay(day)}>
+                                onPress={() => {
+                                    Animated.sequence([
+                                        Animated.timing(fadeAnim, { toValue: 0.7, duration: 100, useNativeDriver: true }),
+                                        Animated.timing(fadeAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
+                                    ]).start();
+                                    toggleDay(day);
+                                }}
+                                >
                                 <LabelComponent
                                     value={day.slice(0, 3)}
                                     style={[
@@ -397,7 +437,8 @@ const HabitDetailScreen: FC = () => {
                         </View>
                     </Animated.View>
                 </Modal>
-            </ScrollView>
+                {/* </Animated.ScrollView> */}
+                </ScrollView>
         </View>
     );
 };

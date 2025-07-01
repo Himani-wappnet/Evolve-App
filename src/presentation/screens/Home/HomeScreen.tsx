@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     View,
     ScrollView,
@@ -8,6 +8,8 @@ import {
     Alert,
     Text,
     RefreshControl,
+    BackHandler,
+    SafeAreaView,
 } from 'react-native';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { format, eachDayOfInterval, startOfWeek, endOfWeek } from 'date-fns';
@@ -23,6 +25,9 @@ import { Habit } from '../../../domain/models/Habit';
 import { RootStackParamList } from '../../../navigation/types';
 import { styles } from './Styles';
 import { Colors } from '../../../constants/colors';
+import * as Animatable from 'react-native-animatable';
+import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -41,6 +46,7 @@ const HomeScreen = () => {
     const [hasMore, setHasMore] = useState(true);
     const [operationLoading, setOperationLoading] = useState(false);
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+    const [userName, setUserName] = useState('');
 
     const weekDays = eachDayOfInterval({
         start: startOfWeek(new Date(), { weekStartsOn: 1 }),
@@ -69,6 +75,45 @@ const HomeScreen = () => {
     useEffect(() => {
         presenter.loadHabits(selectedDate);
     }, [selectedDate, presenter]);
+
+    useEffect(() => {
+        const backAction = () => {
+          if (navigation.isFocused()) {
+            BackHandler.exitApp();
+            return true;
+          }
+        };
+        const backHandler = BackHandler.addEventListener(
+          'hardwareBackPress',
+          backAction,
+        );
+        return () => backHandler.remove();
+      }, []);
+
+    useEffect(() => {
+        const fetchUserDetails = async () => {
+            try {
+                const user = auth().currentUser;
+                if (user) {
+                    const userDoc = await firestore()
+                        .collection('users')
+                        .doc(user.uid)
+                        .get();
+                    
+                    if (userDoc.exists) {
+                        const userData = userDoc.data();
+                        const name = userData?.name?.trim();
+                        setUserName(name ? name : '-');
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching user details:', error);
+                setToast({ message: 'Error loading user details', type: 'error' });
+            }
+        };
+
+        fetchUserDetails();
+    }, []);
 
     const onRefresh = React.useCallback(() => {
         setRefreshing(true);
@@ -131,11 +176,16 @@ const HomeScreen = () => {
         }
     };
 
+    const dayNameRef = useRef({});
+const dayNumberRef = useRef({});
+
     const renderHeader = () => (
         <View style={styles.header}>
             <View style={styles.headerTop}>
-                <Text style={styles.greeting}>Hi, Mert 👋</Text>
-                <Text style={styles.subGreeting}>Let's make habits together!</Text>
+                <Text style={styles.greeting}>Hi, {userName} 👋</Text>
+                <Animatable.Text animation="fadeInUp" delay={500} style={styles.subGreeting}>
+                    Let's make habits together!
+                </Animatable.Text>
             </View>
             
             <View style={styles.dateSelector}>
@@ -148,30 +198,50 @@ const HomeScreen = () => {
                 style={styles.daysContainer}
                 testID="scroll-view"
             >
-                {weekDays.map((day, index) => (
-                    <TouchableOpacity
-                        key={index}
-                        testID={`day-button-${index}`}
-                        style={[
-                            styles.dayButton,
-                            format(day, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd') && styles.selectedDay
-                        ]}
-                        onPress={() => setSelectedDate(day)}
-                    >
-                        <Text style={[
-                            styles.dayName,
-                            format(day, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd') && styles.selectedDayText
-                        ]}>
-                            {format(day, 'EEE')}
-                        </Text>
-                        <Text style={[
-                            styles.dayNumber,
-                            format(day, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd') && styles.selectedDayText
-                        ]}>
-                            {format(day, 'd')}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
+              {weekDays.map((day, index) => {
+    const isSelected = format(day, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
+
+    return (
+        <TouchableOpacity
+    key={index}
+    testID={`day-button-${index}`}
+    style={[
+        styles.dayButton,
+        isSelected && styles.selectedDay
+    ]}
+    onPress={() => {
+        setSelectedDate(day);
+        if (dayNameRef.current[index]) {
+            dayNameRef.current[index].zoomIn();
+        }
+        if (dayNumberRef.current[index]) {
+            dayNumberRef.current[index].zoomIn();
+        }
+    }}
+>
+<Animatable.Text
+        ref={ref => (dayNameRef.current[index] = ref)}
+        style={[
+            styles.dayName,
+            isSelected && styles.selectedDayText
+        ]}
+    >
+        {format(day, 'EEE')}
+    </Animatable.Text>
+    <Animatable.Text
+        ref={ref => (dayNumberRef.current[index] = ref)}
+        style={[
+            styles.dayNumber,
+            isSelected && styles.selectedDayText
+        ]}
+    >
+        {format(day, 'd')}
+    </Animatable.Text>
+
+        </TouchableOpacity>
+    );
+})}
+
             </ScrollView>
         </View>
     );
@@ -200,6 +270,11 @@ const HomeScreen = () => {
                         <Text style={[styles.progressTitle, { color: Colors.white }]}>{getProgressMessage()}</Text>
                         <Text style={[styles.progressSubtitle, { color: Colors.white }]}>{completedCount} of {filteredHabits.length} completed</Text>
                     </View>
+                    <Animatable.View
+  animation={progressPercentage === 100 ? 'pulse' : undefined}
+  iterationCount="infinite"
+  duration={1000}
+>
                     <CircularProgress 
                         percentage={progressPercentage}
                         size={60}
@@ -207,6 +282,7 @@ const HomeScreen = () => {
                         progressColor={progressPercentage === 100 ? Colors.primary : Colors.white}
                         backgroundColor={Colors.primary}
                     />
+                    </Animatable.View>
                 </View>
             </LinearGradient>
         );
@@ -260,7 +336,13 @@ const HomeScreen = () => {
                         </View>
                     ) : (
                         <>
-                            {displayedHabits.map((habit) => (
+                            {displayedHabits.map((habit,index) => (
+                                 <Animatable.View
+                                 key={habit.id}
+                                 animation="fadeInUp"
+                                 delay={index * 100}
+                                 duration={600}
+                               >
                                 <TouchableOpacity
                                     key={habit.id}
                                     testID={`habit-card-${habit.id}`}
@@ -311,6 +393,7 @@ const HomeScreen = () => {
                                         </TouchableOpacity>
                                     </View>
                                 </TouchableOpacity>
+                                </Animatable.View>
                             ))}
                         </>
                     )}
@@ -325,6 +408,8 @@ const HomeScreen = () => {
     };
 
     return (
+        // <View style={{flex: 1,backgroundColor:'red'}}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: Colors.white }}>
         <ScrollView 
             style={styles.container}
             testID="main-scroll-view"
@@ -341,6 +426,9 @@ const HomeScreen = () => {
             {renderProgressCard()}
             {renderHabitsList()}
         </ScrollView>
+        </SafeAreaView>
+        
+        // </View>
     );
 };
 

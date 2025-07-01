@@ -20,7 +20,8 @@ const ProfileScreen: React.FC = () => {
           text: "Logout",
           onPress: async () => {
             await AsyncStorage.removeItem('userToken'); // Clear login state
-            navigation.replace('LoginPage',{toastMessage: 'Logout successful'}); // Redirect to login page
+            await AsyncStorage.removeItem('adminEnabled');
+            navigation.replace('Welcome',{toastMessage: 'Logout successful'}); // Redirect to login page
           }
         }
       ]

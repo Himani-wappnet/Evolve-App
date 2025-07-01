@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 import { View, ScrollView, TouchableOpacity, Text, ActivityIndicator, Modal, Animated } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -30,6 +30,47 @@ const CreateHabitScreen: FC = () => {
     const [selectedCategory, setSelectedCategory] = useState<any>(null);
     const [showHabitList, setShowHabitList] = useState(false);
     const fadeAnim = React.useRef(new Animated.Value(0)).current;
+    const categoryAnim = React.useRef(new Animated.Value(0)).current;
+const customHabitPulse = React.useRef(new Animated.Value(1)).current;
+const emojiSlideAnim = useRef(new Animated.Value(-100)).current;
+
+useEffect(() => {
+    if (showEmojiPicker) {
+      Animated.timing(emojiSlideAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      emojiSlideAnim.setValue(-100);
+    }
+  }, [showEmojiPicker]);
+
+
+useEffect(() => {
+    Animated.sequence([
+      Animated.timing(categoryAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(customHabitPulse, {
+            toValue: 1.05,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(customHabitPulse, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ])
+      ),
+    ]).start();
+  }, []);
+  
 
     // Initialize presenter
     const presenter = React.useMemo(() => {
@@ -92,6 +133,17 @@ const CreateHabitScreen: FC = () => {
         await presenter.createHabit(habit);
     };
 
+    const resetForm = () => {
+        setNewHabitName('');
+        setSelectedEmoji('✨');
+        setError(null);
+    };
+
+    const handleCloseModal = () => {
+        resetForm();
+        setModalVisible(false);
+    };
+
     return (
         <View style={styles.container}>
             <ToolbarComponent
@@ -106,8 +158,18 @@ const CreateHabitScreen: FC = () => {
                     }
                 }}
             />
-            <ScrollView contentContainerStyle={styles.subContainer}>
+            <ScrollView contentContainerStyle={styles.subContainer} showsVerticalScrollIndicator={false}>
                 {habitCategories.map((category) => (
+                    <Animated.View
+                    key={category.id}
+                    style={{
+                      transform: [{ translateY: categoryAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [50, 0],
+                      }) }],
+                      opacity: categoryAnim,
+                    }}>
+                  
                     <TouchableOpacity
                         key={category.id}
                         style={[styles.categoryCard, { backgroundColor: category.color }]}
@@ -137,12 +199,14 @@ const CreateHabitScreen: FC = () => {
                             </View>
                         )}
                     </TouchableOpacity>
+                    </Animated.View>
                 ))}
 
                 <View style={styles.orContainer}>
                     <Text style={styles.orText}>Or</Text>
                 </View>
 
+                <Animated.View style={{ transform: [{ scale: customHabitPulse }] }}>
                 <TouchableOpacity
                     style={[styles.categoryCard, { backgroundColor: '#64B5F6' }]}
                     onPress={() => setModalVisible(true)}>
@@ -151,12 +215,13 @@ const CreateHabitScreen: FC = () => {
                         <Text style={styles.categoryIcon}>🦊</Text>
                     </View>
                 </TouchableOpacity>
+                </Animated.View>
 
                 <Modal
                     visible={modalVisible}
                     transparent
                     animationType="fade"
-                    onRequestClose={() => setModalVisible(false)}>
+                    onRequestClose={handleCloseModal}>
                     <Animated.View style={[styles.modalContainer, { opacity: fadeAnim }]}>
                         <View style={styles.modalContent}>
                             <Text style={styles.modalTitle}>Create New Habit</Text>
@@ -177,6 +242,7 @@ const CreateHabitScreen: FC = () => {
                             </View>
 
                             {showEmojiPicker && (
+                                <Animated.View style={{ transform: [{ translateY: emojiSlideAnim }] }}>
                                 <ScrollView
                                     horizontal
                                     style={styles.emojiPicker}
@@ -193,6 +259,7 @@ const CreateHabitScreen: FC = () => {
                                         </TouchableOpacity>
                                     ))}
                                 </ScrollView>
+                                </Animated.View>
                             )}
 
                             <TextfieldComponent
@@ -203,15 +270,10 @@ const CreateHabitScreen: FC = () => {
                             />
 
                             <View style={styles.modalButtons}>
-                                
                                 <CustomButton
                                     title={Strings.Cancel}
                                     style={styles.cancelBtn}
-                                    onPress={() => {
-                                        setModalVisible(false);
-                                        setSelectedEmoji("✨");
-                                        setNewHabitName('');
-                                    }}
+                                    onPress={handleCloseModal}
                                     styleText={styles.buttonText}
                                     disabled={loading}
                                 />
@@ -222,22 +284,6 @@ const CreateHabitScreen: FC = () => {
                                     styleText={styles.buttonText}
                                     disabled={loading}
                                 />
-                                {/* <TouchableOpacity
-                                    style={styles.cancelBtn}
-                                    onPress={() => {
-                                        setModalVisible(false);
-                                        setSelectedEmoji('✨');
-                                        setNewHabitName('');
-                                    }}>
-                                    <Text style={styles.buttonText}>{Strings.Cancel}</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={styles.addHabitcelBtn}
-                                    onPress={handleCreateHabit}>
-                                    <Text style={styles.buttonText}>
-                                        {loading ? 'Adding...' : Strings.Add_Habit}
-                                    </Text>
-                                </TouchableOpacity> */}
                             </View>
                         </View>
                     </Animated.View>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,10 @@ import {
   Platform,
   ScrollView,
   Image,
+  Dimensions,
+  Animated,
+  Easing,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Colors } from '../../../constants/colors';
@@ -16,9 +20,12 @@ import { NativeModules } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { Dimens } from '../../../constants/dimens';
+import { BarChart } from 'react-native-chart-kit';
+import { heightPercentageToDP as hp} from 'react-native-responsive-screen';
 
 const Icon = MaterialIcons as any;
 const { AdminModule, UsageStatsModule, UsageAccessModule } = NativeModules;
+const screenWidth = Dimensions.get('window').width;
 
 interface UsageData {
   rawInSeconds: number;
@@ -26,6 +33,8 @@ interface UsageData {
   hours: number;
   seconds: number;
   packageName: string;
+  date?: string;
+  icon?: string;
 }
 
 const getAppName = (packageName: string): string => {
@@ -62,8 +71,57 @@ const MobileAddictionScreen = () => {
   const [isAdminEnabled, setIsAdminEnabled] = useState(false);
   const [usageStats, setUsageStats] = useState<UsageData[]>([]);
   const [totalScreenTime, setTotalScreenTime] = useState({ hours: 0, minutes: 0 });
+  const [itemAnimations, setItemAnimations] = useState<Animated.Value[]>([]);
+  const [isChartVisible, setIsChartVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // <-- new
+  const [weeklyData, setWeeklyData] = useState({
+    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    datasets: [{
+      data: [0, 0, 0, 0, 0, 0, 0]
+    }]
+  });
+
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.3)).current;
+  const slideAnim = useRef(new Animated.Value(-50)).current;
 
   useEffect(() => {
+
+    const checkAdminStatus = async () => {
+      const adminFlag = await AsyncStorage.getItem('adminEnabled');
+      if (adminFlag === 'true') {
+        setIsAdminEnabled(true);
+        setShowAdminPopup(false); // Don't show popup
+      } else {
+        setShowAdminPopup(true); // Show popup until user enables
+      }
+      setIsLoading(false); 
+    };
+  
+    checkAdminStatus();
+    // Start animations when component mounts
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.cubic),
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+        easing: Easing.elastic(1),
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.cubic),
+      }),
+    ]).start();
+
     if (Platform.OS === 'android') {
       UsageAccessModule.isUsageAccessGranted()
         .then((granted: boolean) => {
@@ -79,23 +137,63 @@ const MobileAddictionScreen = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsChartVisible(true);
+    }, 2000);
+  
+    return () => clearTimeout(timer); // Clean up on unmount
+  }, []);
+
   const fetchUsageStats = () => {
+    
     UsageStatsModule.getUsageStats({}, (err: any, result: any) => {
       if (err) {
         console.warn("Error getting stats", err);
       } else {
+        setIsLoading(false); 
         // Filter out system apps and sort by usage time
         const filteredStats = result
           .filter((stat: UsageData) => stat.rawInSeconds > 0)
           .sort((a: UsageData, b: UsageData) => b.rawInSeconds - a.rawInSeconds);
 
-        // Calculate total screen time
-        const totalSeconds = filteredStats.reduce((acc: number, curr: UsageData) => acc + curr.rawInSeconds, 0);
-        const totalHours = Math.floor(totalSeconds / 3600);
-        const totalMinutes = Math.floor((totalSeconds % 3600) / 60);
+          const totalSeconds = filteredStats.reduce(
+            (acc: number, curr: UsageData) => acc + curr.rawInSeconds,
+            0
+          );
+          
+          const totalMinutes = Math.round(totalSeconds / 60); // Convert to minutes
+          const totalHours = Math.floor(totalMinutes / 60);
+          const remainingMinutes = totalMinutes % 60;
+          
+          setTotalScreenTime({ hours: totalHours, minutes: remainingMinutes });
+          setUsageStats(filteredStats);
 
-        setTotalScreenTime({ hours: totalHours, minutes: totalMinutes });
-        setUsageStats(filteredStats);
+          // Calculate exact hours with decimals (e.g., 3.5 for 3h 30m)
+          const totalHoursDecimal = Number((totalSeconds / 3600).toFixed(2));
+
+          setWeeklyData({
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+              data: [totalHoursDecimal, 0, 0, 0, 0, 0, 0]
+            }]
+          });
+
+          const animations: Animated.Value[] = filteredStats.map(() => new Animated.Value(100));
+          setItemAnimations(animations);
+    
+          // Animate slide-in from right one by one
+          Animated.stagger(100,
+            animations.map(anim =>
+              Animated.timing(anim, {
+                toValue: 0,
+                duration: 500,
+                useNativeDriver: true,
+                easing: Easing.out(Easing.exp)
+              })
+            )
+          ).start();
+          // setIsLoading(true); 
       }
     });
   };
@@ -103,6 +201,7 @@ const MobileAddictionScreen = () => {
   const handleEnableAdmin = async () => {
     try {
       await AdminModule.activateAdmin();
+      await AsyncStorage.setItem('adminEnabled', 'true'); // store it
       setIsAdminEnabled(true);
       setShowAdminPopup(false);
       Alert.alert('Success', 'Admin access has been enabled');
@@ -112,8 +211,26 @@ const MobileAddictionScreen = () => {
     }
   };
 
+  const filteredStats = Object.values(
+    usageStats.reduce((acc: { [key: string]: UsageData }, curr: UsageData) => {
+      const existing = acc[curr.packageName];
+      if (!existing || curr.rawInSeconds > existing.rawInSeconds) {
+        acc[curr.packageName] = curr;
+      }
+      return acc;
+    }, {} as { [key: string]: UsageData })
+  );
+
+  const maxHours = weeklyData?.datasets?.[0]?.data?.length
+  ? Math.max(...weeklyData.datasets[0].data)
+  : 0;
+
+// Round to the nearest whole number or half
+const safeMax = Math.ceil(maxHours);
+
   return (
     <View style={styles.container}>
+      {!isLoading && showAdminPopup && (
       <Modal
         visible={showAdminPopup}
         transparent={true}
@@ -146,8 +263,7 @@ const MobileAddictionScreen = () => {
           </View>
         </View>
       </Modal>
-
-      {/* <View style={styles.content}> */}
+      )}
 
       <View style={styles.header}>
         <TouchableOpacity testID="header-back-button" onPress={() => navigation.navigate('Dashboard')}>
@@ -155,37 +271,116 @@ const MobileAddictionScreen = () => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Activity details</Text>
         <TouchableOpacity onPress={() => {}}>
-          {/* <Icon name="star-border" size={24} color="#000" /> */}
         </TouchableOpacity>
       </View>
 
-        {/* <Text style={styles.title}>Activity details</Text> */}
-
+      <ScrollView style={styles.content}>
+        {/* <Animated.View 
+          style={[
+            styles.screenTimeContainer,
+            {
+              opacity: fadeAnim,
+              transform: [
+                { scale: scaleAnim },
+                { translateY: slideAnim }
+              ]
+            }
+          ]}
+        > */}
         <View style={styles.screenTimeContainer}>
-          <Text style={styles.screenTimeLabel}>Screen time</Text>
+          <View style={{flexDirection:'row'}}>
+          <Text style={[styles.screenTimeLabel, { color: Colors.text }]}>Screen time : </Text>
           <Text style={styles.screenTimeValue}>
             {totalScreenTime.hours} hrs, {totalScreenTime.minutes} min
           </Text>
+          </View>
           <Text style={styles.screenTimeSubtext}>Today</Text>
-        </View>
+          </View>
+        <View style={styles.chartContainer}>
+       
+{isChartVisible ? (
 
-        <ScrollView style={styles.appList}>
-          {usageStats.map((stat, index) => (
-            <View key={index} style={styles.appItem}>
-              <View style={styles.appInfo}>
-                <Text style={styles.appName}>{getAppName(stat.packageName)}</Text>
-                <Text style={styles.appTime}>
-                  {formatDuration(stat.hours, stat.minutes)}
-                </Text>
-              </View>
-              <TouchableOpacity style={styles.timerIcon}>
-                <Text>⌛</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </ScrollView>
-      </View>
-    // </View>
+          <BarChart
+            data={weeklyData}
+            width={screenWidth - 32}
+            height={220}
+            yAxisLabel=""
+            yAxisSuffix="h"
+            fromZero={true}
+            segments={safeMax}
+            flatColor={true}
+            chartConfig={{
+              backgroundColor: Colors.white,
+              backgroundGradientFrom: Colors.white,
+              backgroundGradientTo: Colors.white,
+              decimalPlaces: 0,
+              color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
+              labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+              style: {
+                borderRadius: 16,
+                paddingRight: 0,
+              },
+              barPercentage: 0.6,
+              formatYLabel: (value: string) => `${Math.round(Number(value))}`,
+            }}
+            style={{
+              borderRadius: 16,
+            }}
+          />
+                  ) : (
+  <ActivityIndicator size="large" color={Colors.primary} style={styles.loadingMoreContainer}/>
+)}
+    </View>
+
+        <Animated.View 
+          style={{
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }]
+          }}
+        >
+          <View style={styles.appList}>
+            {filteredStats.map((stat: UsageData, index) => (
+                <Animated.View
+                key={index}
+                style={[
+                  styles.appItem,
+                  {
+                    transform: [{
+                      translateX: itemAnimations[index] || new Animated.Value(0)
+                    }],
+                    opacity: fadeAnim
+                  }
+                ]}
+              >
+                <View style={styles.appInfo}>
+                  <View>
+                    {stat.icon ? (
+                      <Image
+                        source={{ uri: `data:image/png;base64,${stat.icon}` }}
+                        style={styles.appIcon}
+                      />
+                    ) : (
+                      <View style={styles.placeholderIcon}>
+                        <Text>📱</Text>
+                      </View>
+                    )}
+                  </View>
+                  <View style={styles.appDetails}>
+                    <Text style={styles.appName}>{getAppName(stat.packageName)}</Text>
+                    <Text style={styles.appTime}>
+                      {formatDuration(stat.hours, stat.minutes)}
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity style={styles.timerIcon}>
+                  <Text>⌛</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            ))}
+          </View>
+        </Animated.View>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -194,6 +389,33 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
+  loadingMoreContainer: {
+    // padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  appIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    marginRight: 10,
+  },
+  
+  placeholderIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: '#ccc',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  
+  appDetails: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -266,22 +488,23 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 20,
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
     color: Colors.text,
-    marginBottom: 20,
+    // marginBottom: 20,
   },
   screenTimeContainer: {
+    padding:12,
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: hp("2%"),
+    // flexDirection:'row',
+    // justifyContent:'space-between'
   },
   screenTimeLabel: {
-    fontSize: Dimens.fontSize.FONTSIZE_14,
-    color: Colors.primary,
-    marginBottom: 10,
+    fontSize: Dimens.fontSize.FONTSIZE_16,
+    fontWeight: '600',
   },
   screenTimeValue: {
     fontSize: Dimens.fontSize.FONTSIZE_18,
@@ -291,8 +514,9 @@ const styles = StyleSheet.create({
   },
   screenTimeSubtext: {
     fontSize: 16,
-    color: Colors.text,
+    color: Colors.primary,
     opacity: 0.7,
+    textDecorationLine:'underline'
   },
   appList: {
     flex: 1,
@@ -307,6 +531,7 @@ const styles = StyleSheet.create({
   },
   appInfo: {
     flex: 1,
+    flexDirection: 'row',
   },
   appName: {
     fontSize: 16,
@@ -320,6 +545,16 @@ const styles = StyleSheet.create({
   },
   timerIcon: {
     padding: 10,
+  },
+  chartContainer: {
+    alignSelf: 'center',
+  },
+  loader: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginLeft: -25,
+    marginTop: -25,
   },
 });
 

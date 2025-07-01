@@ -58,7 +58,12 @@ const FloatingShopButton: React.FC = () => {
               <Text style={styles.bottomText}>{Strings.Create_Custom_Habit}</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.option}>
+            <TouchableOpacity style={styles.option}
+            onPress={() => {
+              toggleModal(); // Close Main Modal
+              navigation.navigate("DietPlanning");
+            }}
+            >
               <Text style={styles.bottomText}>{Strings.Create_Diet_Plan}</Text>
             </TouchableOpacity>
 

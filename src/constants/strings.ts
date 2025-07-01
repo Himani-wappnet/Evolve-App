@@ -38,4 +38,7 @@ export const Strings = {
     Minutes: 'minutes',
     Hour: 'hour',
     Minute: 'minute',
+
+    WELCOME_TITLE: 'Welcome to Daily Tracker',
+    WELCOME_SUBTITLE: 'Track your daily activities, set goals, and achieve more with our intuitive tracking app.',
 } as const;

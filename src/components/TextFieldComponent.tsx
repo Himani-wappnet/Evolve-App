@@ -3,6 +3,7 @@ import { StyleSheet, TextInput, TextInputProps, View, Image, TouchableOpacity } 
 import { TextStyles } from '../constants/textstyle';
 import { Colors } from '../constants/colors';
 import { icons } from '../constants/images';
+import { Dimens } from '../constants/dimens';
 
 
 interface TextfieldComponentProps extends TextInputProps {
@@ -30,7 +31,7 @@ const TextfieldComponent: React.FC<TextfieldComponentProps> = ({
   return (
     <View style={[styles.inputContainer, style]}>
   
-      <Image source={icon} style={[styles.icon, iconSize]} />
+      {/* <Image source={icon} style={[styles.icon, iconSize]} /> */}
       <TextInput
         style={[styles.input]}
         placeholder={placeholder}
@@ -61,11 +62,13 @@ const styles = StyleSheet.create({
     justifyContent:'center',
     // width: 317,
     // height: 50,
-    borderWidth: 1,
-    borderColor: Colors.darkGray1,
+    // borderWidth: 1,
+    // borderColor: Colors.darkGray1,
     borderRadius: 10,
      paddingHorizontal: 10,
-    backgroundColor: Colors.extraLightGray,
+     borderBottomWidth: 1,
+     borderBottomColor: '#ddd',
+    // backgroundColor: Colors.extraLightGray,
   },
   icon: {
     
@@ -75,7 +78,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
    fontFamily:TextStyles.mediumText,
-   fontSize:13,
+   fontSize:Dimens.fontSize.FONTSIZE_14,
    color: Colors.graniteGray,
   
   },

@@ -26,7 +26,11 @@ export const icons = {
     IC_STAR_UNFILLED: require("../assets/icons/star_unfilled.png"),
     IC_CALENDER:require("../assets/icons/calender.png"),
     IC_BACK_ARROW :require('../assets/icons/ic_arrow_back.png'),
-    IC_DELETE :require('../assets/icons/delete_icon.png')
+    IC_DELETE :require('../assets/icons/delete_icon.png'),
+    // IC_APP_LOGO: require('../../assets/images/app_logo.png'),
+    // IC_TRACKER: require('../../assets/images/tracker.png'),
+    // IC_GOALS: require('../../assets/images/goals.png'),
+    // IC_STATS: require('../../assets/images/stats.png'),
   };
 
 
@@ -50,5 +54,6 @@ export const icons = {
    SPECIAL_OFFER:require("../assets/image/special_offer.png"),
    HEELS:require("../assets/image/heels.png"),
    COMPLETED:require("../assets/image/completed.png"),
+   HABITTRACKING:require("../assets/image/habitTracking.jpg"),
 
   };

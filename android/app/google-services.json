@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "1013020519727",
+    "firebase_url": "https://evolve-3cb23-default-rtdb.firebaseio.com",
     "project_id": "evolve-3cb23",
     "storage_bucket": "evolve-3cb23.firebasestorage.app"
   },
@@ -12,7 +13,20 @@
           "package_name": "com.evolve"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1013020519727-7ip28ils1qea0tm6i0kpadtrkvjnknmr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.evolve",
+            "certificate_hash": "67445ce6496d332e8909669e47b4ed2848385f2f"
+          }
+        },
+        {
+          "client_id": "1013020519727-248jie3u6uuh86bejmbqp1c9qeo6ptqi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBUxnH76ZXW5KF5xF9RmGWtbY1xPGVmO0s"
@@ -20,7 +34,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1013020519727-248jie3u6uuh86bejmbqp1c9qeo6ptqi.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

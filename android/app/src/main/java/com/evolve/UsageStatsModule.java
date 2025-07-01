@@ -17,6 +17,14 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
+import android.util.Base64;
+import java.io.ByteArrayOutputStream;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+
 public class UsageStatsModule extends ReactContextBaseJavaModule {
     private final ReactApplicationContext reactContext;
 
@@ -43,11 +51,13 @@ public class UsageStatsModule extends ReactContextBaseJavaModule {
         );
 
         WritableArray result = Arguments.createArray();
+        PackageManager pm = reactContext.getPackageManager();
 
         if (appList != null && !appList.isEmpty()) {
             for (UsageStats usageStats : appList) {
                 long totalTimeMs = usageStats.getTotalTimeInForeground();
-                   if (totalTimeMs > 0) {
+
+            if (totalTimeMs > 0) {
                 WritableMap app = Arguments.createMap();
                 long totalSeconds = totalTimeMs / 1000;
 
@@ -55,11 +65,33 @@ public class UsageStatsModule extends ReactContextBaseJavaModule {
                 long minutes = (totalSeconds % 3600) / 60;
                 long seconds = totalSeconds % 60;
 
+                String packageName = usageStats.getPackageName();
+
                 app.putString("packageName", usageStats.getPackageName());
                 app.putInt("hours", (int) hours);
                 app.putInt("minutes", (int) minutes);
                 app.putInt("seconds", (int) seconds);
                 app.putDouble("rawInSeconds", totalSeconds);
+
+                 // Get and encode app icon
+                    try {
+                        ApplicationInfo appInfo = pm.getApplicationInfo(packageName, 0);
+                        Drawable icon = pm.getApplicationIcon(appInfo);
+
+                        Bitmap bitmap = Bitmap.createBitmap(icon.getIntrinsicWidth(), icon.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+                        Canvas canvas = new Canvas(bitmap);
+                        icon.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+                        icon.draw(canvas);
+
+                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+                        byte[] byteArray = byteArrayOutputStream.toByteArray();
+                        String encodedIcon = Base64.encodeToString(byteArray, Base64.DEFAULT);
+
+                        app.putString("icon", encodedIcon);
+                    } catch (Exception e) {
+                        app.putString("icon", ""); // fallback if icon not found
+                    }
 
                 result.pushMap(app);
             }
@@ -68,57 +100,4 @@ public class UsageStatsModule extends ReactContextBaseJavaModule {
 
         callback.invoke(null, result);
     }
-
-//    @ReactMethod
-// public void getUsageStats(ReadableMap config, Callback callback) {
-//     UsageStatsManager usm = (UsageStatsManager) reactContext.getSystemService(Context.USAGE_STATS_SERVICE);
-
-//     // Get start of the current day (midnight)
-//     java.util.Calendar calendar = java.util.Calendar.getInstance();
-//     calendar.set(java.util.Calendar.HOUR_OF_DAY, 0);
-//     calendar.set(java.util.Calendar.MINUTE, 0);
-//     calendar.set(java.util.Calendar.SECOND, 0);
-//     calendar.set(java.util.Calendar.MILLISECOND, 0);
-//     long startTime = calendar.getTimeInMillis();
-
-//     long endTime = System.currentTimeMillis();
-
-//     List<UsageStats> appList = usm.queryUsageStats(
-//             UsageStatsManager.INTERVAL_DAILY,
-//             startTime,
-//             endTime
-//     );
-
-//     WritableArray result = Arguments.createArray();
-//     Map<String, Long> usageMap = new HashMap<>();
-
-//     if (appList != null && !appList.isEmpty()) {
-//         for (UsageStats usageStats : appList) {
-//             long totalTimeMs = usageStats.getTotalTimeInForeground();
-//             if (totalTimeMs > 0) {
-//                 String packageName = usageStats.getPackageName();
-//                 usageMap.put(packageName, usageMap.getOrDefault(packageName, 0L) + totalTimeMs);
-//             }
-//         }
-
-//         for (Map.Entry<String, Long> entry : usageMap.entrySet()) {
-//             long totalSeconds = entry.getValue() / 1000;
-//             long hours = totalSeconds / 3600;
-//             long minutes = (totalSeconds % 3600) / 60;
-//             long seconds = totalSeconds % 60;
-
-//             WritableMap app = Arguments.createMap();
-//             app.putString("packageName", entry.getKey());
-//             app.putInt("hours", (int) hours);
-//             app.putInt("minutes", (int) minutes);
-//             app.putInt("seconds", (int) seconds);
-//             app.putDouble("rawInSeconds", totalSeconds);
-
-//             result.pushMap(app);
-//         }
-//     }
-
-//     callback.invoke(null, result);
-// }
-
 }

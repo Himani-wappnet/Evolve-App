@@ -8,7 +8,8 @@
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest",
-    "android_clean": "cd android && ./gradlew clean && cd .."
+    "android_clean": "cd android && ./gradlew clean && cd ..",
+    "build_android": "cd android && ./gradlew app:assembleRelease && cd .."
   },
   "dependencies": {
     "@babel/preset-react": "^7.26.3",
@@ -21,6 +22,7 @@
     "@react-native-firebase/app": "^21.12.0",
     "@react-native-firebase/auth": "^21.12.0",
     "@react-native-firebase/firestore": "^21.12.0",
+    "@react-native-google-signin/google-signin": "^13.2.0",
     "@react-native-voice/voice": "^3.2.4",
     "@react-navigation/bottom-tabs": "^7.2.1",
     "@react-navigation/native": "^7.0.14",
@@ -37,10 +39,13 @@
     "date-fns-tz": "^3.2.0",
     "firebase": "^11.5.0",
     "jwt-decode": "^4.0.0",
+    "lottie-react-native": "^7.2.2",
     "react": "18.3.1",
     "react-native": "0.77.0",
+    "react-native-animatable": "^1.4.0",
     "react-native-chart-kit": "^6.12.0",
     "react-native-gesture-handler": "^2.24.0",
+    "react-native-keyboard-aware-scroll-view": "^0.9.5",
     "react-native-linear-gradient": "^2.8.3",
     "react-native-modal": "^14.0.0-rc.1",
     "react-native-reanimated": "3.16.7",

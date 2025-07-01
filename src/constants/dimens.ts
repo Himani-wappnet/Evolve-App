@@ -10,6 +10,7 @@ export const Dimens = {
     FONTSIZE_16: 16,
     FONTSIZE_18: 18,
     FONTSIZE_20: 20,
+    FONTSIZE_24: 24,
     FONTSIZE_36: 36,
   },
   height: {

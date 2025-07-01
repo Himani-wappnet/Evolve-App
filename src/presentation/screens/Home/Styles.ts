@@ -7,7 +7,7 @@ import { Colors } from '../../../constants/colors';
 
 export const styles = StyleSheet.create({
     container: {
-        flex: 1,
+        // flexGrow: 1,
         marginBottom: hp('7%'),
         backgroundColor: '#F8F9FA',
       },
@@ -159,18 +159,19 @@ export const styles = StyleSheet.create({
       },
       habitCard: {
         flexDirection: 'row',
+        width:wp("89%"),
         justifyContent: 'space-between',
         alignItems: 'center',
         backgroundColor: Colors.white,
         padding: wp('4%'),
-        borderRadius: 5,
+        borderRadius: 3,
         marginBottom: hp('2%'),
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
-        elevation:2, 
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        overflow: 'hidden',
+        // shadowOpacity: 0.15,
+        // shadowRadius: 8,
+        elevation:1, 
+        // shadowColor: '#000',
+        // shadowOffset: { width: 0, height: 4 },
+        // overflow: 'hidden',
       },
       habitLeft: {
         flexDirection: 'row',

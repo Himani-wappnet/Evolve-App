@@ -13,10 +13,6 @@ import TextfieldComponent from '../../components/TextFieldComponent';
 import auth from '@react-native-firebase/auth';
 import Toast from '../../components/Toast';
 
-interface LoginPageProps {
-  navigation: NativeStackNavigationProp<any>;
-}
-
 const LoginPage = ({ navigation, route }: any) => {
 
   useEffect(()=>{

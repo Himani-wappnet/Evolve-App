@@ -76,7 +76,8 @@ const palette = {
 export const Colors = {
   palette,
   text: palette.neutral800,
-  primary: '#6200EE',
+  primary: '#397ef6',
+  // primary:"#6200EE",
   primaryLight: '#BB86FC',
   secondary: '#03DAC6',
   background: '#F5F5F5',
