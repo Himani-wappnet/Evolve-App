@@ -1,97 +1,107 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Evolve_App
 
-# Getting Started
+A React Native project.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## Table of Contents
 
-## Step 1: Start Metro
+- [Introduction](#introduction)
+- [Configuration (Environment Configurations)](#environment-configurations)
+- [Running the Project](#running-the-project)
+- [Building the Project](#building-the-project)
+- [Additional Information](#additional-information)
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## Introduction
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+`Evolve_App` is more than just a productivity app — it’s your daily partner in building a balanced, healthier lifestyle. Whether you're aiming to reduce screen time, improve your diet, establish better habits, or wake up with purpose, Evolve helps you take small, consistent steps toward a better you.
 
-```sh
-# Using npm
-npm start
+## Running the Project
 
-# OR using Yarn
-yarn start
-```
+To run the desired ENVIRONMENT either use the launch configuration in VSCode or use the following commands:
 
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
+### 1 DEVELOPMENT
 
 ```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
+npx react-native start
+npx react-native run-android
 ```
 
-### iOS
+## Building the Project
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+To build appbundle the desired ENVIRONMENT use the the following commands:
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+### 1 DEVELOPMENT
 
 ```sh
-bundle install
+cd android && ./gradlew bundleRelease && cd ..
 ```
 
-Then, and every time you update your native dependencies, run:
+To build apk the desired ENVIRONMENT use the the following commands:
+
+### 1 DEVELOPMENT
 
 ```sh
-bundle exec pod install
+cd android && ./gradlew app:assembleRelease && cd ..
 ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+## 🛠️ Platform Requirements
 
-```sh
-# Using npm
-npm run ios
+This project requires the following versions:
 
-# OR using Yarn
-yarn ios
+- React Native: 0.77.0
+- React: 18.3.1
+- Node.js: >=18.x.x
+- npm: >=9.x.x or yarn >=1.22.x
+- Java: JDK 11 or JDK 17
+- versionCode 1
+- versionName "1.0"
+
+## Additional Information
+
+### Projects Folder Structure
+
 ```
-
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+ikonik_dance_app/
+├── android/
+├── ios/
+├── src/
+│   ├── components/
+│   │   ├── Button.tsx
+│   │   ├── TouchableText.tsx
+│   │   └── LoadingBar.tsx
+│   ├── screens/
+│   │   ├── SplashScreen.tsx
+│   │   ├── HomeScreen.tsx
+│   │   ├── ProfileScreen.tsx
+│   ├── navigation/
+│   │   ├── AuthStack.tsx
+│   │   ├── HomeStack.tsx
+│   │   ├── RootNavigator.tsx
+│   ├── assets/
+│   │   ├── images/
+│   │   │   └── login.jpg
+│   │   │   └── homepage.jpg
+│   │   ├── icons/
+│   │   │   ├── apple_logo.png
+│   │   │   └── about_us.png
+│   │   │   └── arrow.png
+│   ├── constant/
+│   │   ├── Dimens.tsx
+│   │   ├── ImageConst.ts
+│   │   ├── String.ts
+│   │   ├── Links.ts
+|   ├── utils/
+|   |   ├── Validation.ts
+|   |   ├── Endpoints.ts
+|   |   ├── AxiosInstance.ts
+|   |   ├── normalize.ts
+|   ├── styles/
+|   |   ├── Colors.ts
+|   |   ├── Text.ts
+│   ├── App.tsx
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── .eslintrc.js
+│   └── .prettierrc
+│   └── babel.config.js
+│   └── README.md
+```
